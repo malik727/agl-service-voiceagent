@@ -13,53 +13,55 @@ from nlu.rasa_interface import RASAInterface
 class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
     def __init__(self):
         # Get the config values
-        STT_MODEL_PATH = get_config_value('STT_MODEL_PATH')
-        WAKE_WORD = get_config_value('WAKE_WORD')
-        BASE_AUDIO_DIR = get_config_value('BASE_AUDIO_DIR')
-        CHANNELS = int(get_config_value('CHANNELS'))
-        SAMPLE_RATE = int(get_config_value('SAMPLE_RATE'))
-        BITS_PER_SAMPLE = int(get_config_value('BITS_PER_SAMPLE'))
-        SNIPS_MODEL_PATH = get_config_value('SNIPS_MODEL_PATH')
-        RASA_MODEL_PATH = get_config_value('RASA_MODEL_PATH')
-        RASA_SERVER_PORT = int(get_config_value('RASA_SERVER_PORT'))
-        BASE_LOG_DIR = get_config_value('BASE_LOG_DIR')
+        self.wake_word = get_config_value('WAKE_WORD')
+        self.base_audio_dir = get_config_value('BASE_AUDIO_DIR')
+        self.channels = int(get_config_value('CHANNELS'))
+        self.sample_rate = int(get_config_value('SAMPLE_RATE'))
+        self.bits_per_sample = int(get_config_value('BITS_PER_SAMPLE'))
+        self.stt_model_path = get_config_value('STT_MODEL_PATH')
+        self.snips_model_path = get_config_value('SNIPS_MODEL_PATH')
+        self.rasa_model_path = get_config_value('RASA_MODEL_PATH')
+        self.rasa_server_port = int(get_config_value('RASA_SERVER_PORT'))
+        self.base_log_dir = get_config_value('BASE_LOG_DIR')
 
         # Initialize class methods
-        self.stt_model = STTModel(STT_MODEL_PATH, SAMPLE_RATE)
-        self.wake_word_detector = WakeWordDetector(WAKE_WORD, self.stt_model, CHANNELS, SAMPLE_RATE, BITS_PER_SAMPLE)
-        self.recorder = AudioRecorder(self.stt_model, BASE_AUDIO_DIR, CHANNELS, SAMPLE_RATE, BITS_PER_SAMPLE)
         self.detection_thread = None  # To hold the wake word detection thread
-        self.snips_interface = SnipsInterface(SNIPS_MODEL_PATH)
-        self.rasa_interface = RASAInterface(RASA_SERVER_PORT, RASA_MODEL_PATH, BASE_LOG_DIR)
+        self.stt_model = STTModel(self.stt_model_path, self.sample_rate)
+        self.snips_interface = SnipsInterface(self.snips_model_path)
+        self.rasa_interface = RASAInterface(self.rasa_server_port, self.rasa_model_path, self.base_log_dir)
         self.rasa_interface.start_server()
 
+
     def DetectWakeWord(self, request, context):
-        self.wake_word_detector.cleanup_pipeline()
-        self.wake_word_detector.create_pipeline()
-        self.detection_thread = threading.Thread(target=self.wake_word_detector.start_listening)
-        self.detection_thread.start()
+        wake_word_detector = WakeWordDetector(self.wake_word, self.stt_model, self.channels, self.sample_rate, self.bits_per_sample)
+        wake_word_detector.create_pipeline()
+        detection_thread = threading.Thread(target=wake_word_detector.start_listening)
+        detection_thread.start()
+
         while True:
-            status = self.wake_word_detector.get_wake_word_status()
+            status = wake_word_detector.get_wake_word_status()
             time.sleep(1)
             yield voice_agent_pb2.WakeWordStatus(status=status)
             if status:
                 break
-        
-        self.detection_thread.join()
+
+        detection_thread.join()
+    
     
     def RecognizeVoiceCommand(self, request, context):
+        recorder = AudioRecorder(self.stt_model, self.base_audio_dir, self.channels, self.sample_rate, self.bits_per_sample)
 
         if request.record_mode == voice_agent_pb2.AUTO:
-            self.recorder.cleanup_pipeline()
-            audio_file = self.recorder.create_pipeline("auto")
-            self.recorder.start_recording()
+            recorder.cleanup_pipeline()
+            audio_file = recorder.create_pipeline("auto")
+            recorder.start_recording()
         
         elif request.record_mode == voice_agent_pb2.MANUAL:
-            self.recorder.cleanup_pipeline()
-            audio_file = self.recorder.create_pipeline("manual")
-            self.recorder.start_recording()
+            recorder.cleanup_pipeline()
+            audio_file = recorder.create_pipeline("manual")
+            recorder.start_recording()
             time.sleep(7.5)
-            self.recorder.stop_recording()
+            recorder.stop_recording()
             stt = self.stt_model.recognize_from_file(audio_file)
             intent = "INTENT_NOT_RECOGNIZED"
             intent_slots = []

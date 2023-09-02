@@ -1,6 +1,6 @@
 import re
 from typing import Text
-from nlu_inference_agl import SnipsNLUEngine
+from snips_inference_agl import SnipsNLUEngine
 
 class SnipsInterface:
     def __init__(self, model_path: Text):
