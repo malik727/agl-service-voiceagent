@@ -1,0 +1,4 @@
+grpcio==1.45.0
+grpcio-tools==1.45.0
+vosk==0.3.42
+PyGObject==3.42.0
