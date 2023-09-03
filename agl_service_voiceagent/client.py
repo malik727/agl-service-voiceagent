@@ -1,7 +1,13 @@
+import time
 import grpc
 from generated import voice_agent_pb2
 from generated import voice_agent_pb2_grpc
 from utils.config import get_config_value
+
+# following code is only reqired for logging
+# import logging
+# logging.basicConfig()
+# logging.getLogger("grpc").setLevel(logging.DEBUG)
 
 SERVER_URL = get_config_value('SERVER_ADDRESS') + ":" + str(get_config_value('SERVER_PORT'))
 
@@ -26,13 +32,17 @@ def run_client(mode, nlu_model):
                     break
 
         elif mode == 'auto':
-            print("Auto mode not supported yet.")
+            raise ValueError("Auto mode is not implemented yet.")
 
         elif mode == 'manual':
             stub = voice_agent_pb2_grpc.VoiceAgentServiceStub(channel)
             print("Recording voice command...")
-            record_request = voice_agent_pb2.RecognizeControl(action=voice_agent_pb2.START, nlu_model=nlu_model, record_mode=voice_agent_pb2.MANUAL)
-            record_result = stub.RecognizeVoiceCommand(record_request)
+            record_start_request = voice_agent_pb2.RecognizeControl(action=voice_agent_pb2.START, nlu_model=nlu_model, record_mode=voice_agent_pb2.MANUAL)
+            response = stub.RecognizeVoiceCommand(iter([record_start_request]))
+            stream_id = response.stream_id
+            time.sleep(5) # any arbitrary pause here
+            record_stop_request = voice_agent_pb2.RecognizeControl(action=voice_agent_pb2.STOP, nlu_model=nlu_model, record_mode=voice_agent_pb2.MANUAL, stream_id=stream_id)
+            record_result = stub.RecognizeVoiceCommand(iter([record_stop_request]))
             print("Voice command recorded!")
             # Process the response
             print("Command:", record_result.command)

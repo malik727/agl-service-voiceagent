@@ -19,7 +19,7 @@ class VoiceAgentServiceStub(object):
                 request_serializer=voice__agent__pb2.Empty.SerializeToString,
                 response_deserializer=voice__agent__pb2.WakeWordStatus.FromString,
                 )
-        self.RecognizeVoiceCommand = channel.unary_unary(
+        self.RecognizeVoiceCommand = channel.stream_unary(
                 '/VoiceAgentService/RecognizeVoiceCommand',
                 request_serializer=voice__agent__pb2.RecognizeControl.SerializeToString,
                 response_deserializer=voice__agent__pb2.RecognizeResult.FromString,
@@ -35,7 +35,7 @@ class VoiceAgentServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def RecognizeVoiceCommand(self, request, context):
+    def RecognizeVoiceCommand(self, request_iterator, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -49,7 +49,7 @@ def add_VoiceAgentServiceServicer_to_server(servicer, server):
                     request_deserializer=voice__agent__pb2.Empty.FromString,
                     response_serializer=voice__agent__pb2.WakeWordStatus.SerializeToString,
             ),
-            'RecognizeVoiceCommand': grpc.unary_unary_rpc_method_handler(
+            'RecognizeVoiceCommand': grpc.stream_unary_rpc_method_handler(
                     servicer.RecognizeVoiceCommand,
                     request_deserializer=voice__agent__pb2.RecognizeControl.FromString,
                     response_serializer=voice__agent__pb2.RecognizeResult.SerializeToString,
@@ -82,7 +82,7 @@ class VoiceAgentService(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def RecognizeVoiceCommand(request,
+    def RecognizeVoiceCommand(request_iterator,
             target,
             options=(),
             channel_credentials=None,
@@ -92,7 +92,7 @@ class VoiceAgentService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/VoiceAgentService/RecognizeVoiceCommand',
+        return grpc.experimental.stream_unary(request_iterator, target, '/VoiceAgentService/RecognizeVoiceCommand',
             voice__agent__pb2.RecognizeControl.SerializeToString,
             voice__agent__pb2.RecognizeResult.FromString,
             options, channel_credentials,

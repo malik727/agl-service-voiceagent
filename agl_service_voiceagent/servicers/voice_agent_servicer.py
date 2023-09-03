@@ -8,6 +8,7 @@ from utils.stt_model import STTModel
 from utils.config import get_config_value
 from nlu.snips_interface import SnipsInterface
 from nlu.rasa_interface import RASAInterface
+from utils.common import generate_unique_uuid
 
 
 class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
@@ -30,6 +31,7 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         self.snips_interface = SnipsInterface(self.snips_model_path)
         self.rasa_interface = RASAInterface(self.rasa_server_port, self.rasa_model_path, self.base_log_dir)
         self.rasa_interface.start_server()
+        self.rvc_stream_uuids = {}
 
 
     def DetectWakeWord(self, request, context):
@@ -48,40 +50,56 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         detection_thread.join()
     
     
-    def RecognizeVoiceCommand(self, request, context):
-        recorder = AudioRecorder(self.stt_model, self.base_audio_dir, self.channels, self.sample_rate, self.bits_per_sample)
+    def RecognizeVoiceCommand(self, requests, context):
+        intent = "INTENT_NOT_RECOGNIZED"
+        intent_slots = []
 
-        if request.record_mode == voice_agent_pb2.AUTO:
-            recorder.cleanup_pipeline()
-            audio_file = recorder.create_pipeline("auto")
-            recorder.start_recording()
-        
-        elif request.record_mode == voice_agent_pb2.MANUAL:
-            recorder.cleanup_pipeline()
-            audio_file = recorder.create_pipeline("manual")
-            recorder.start_recording()
-            time.sleep(7.5)
-            recorder.stop_recording()
-            stt = self.stt_model.recognize_from_file(audio_file)
-            intent = "INTENT_NOT_RECOGNIZED"
-            intent_slots = []
-            if stt not in ["FILE_NOT_FOUND", "FILE_FORMAT_INVALID", "NOT_RECOGNIZED"]:
-                if request.nlu_model == voice_agent_pb2.SNIPS:
-                    extracted_intent = self.snips_interface.extract_intent(stt)
-                    intent, intent_actions = self.snips_interface.process_intent(extracted_intent)
-                    for action, value in intent_actions.items():
-                        intent_slots.append(voice_agent_pb2.IntentSlot(name=action, value=value))
-                
-                elif request.nlu_model == voice_agent_pb2.RASA:
-                    extracted_intent = self.rasa_interface.extract_intent(stt)
-                    intent, intent_actions = self.rasa_interface.process_intent(extracted_intent)
-                    for action, value in intent_actions.items():
-                        intent_slots.append(voice_agent_pb2.IntentSlot(name=action, value=value))
+        for request in requests:
+            if request.record_mode == voice_agent_pb2.MANUAL:
+
+                if request.action == voice_agent_pb2.START:
+                    stream_uuid = generate_unique_uuid(8)
+                    recorder = AudioRecorder(self.stt_model, self.base_audio_dir, self.channels, self.sample_rate, self.bits_per_sample)
+                    recorder.set_pipeline_mode("manual")
+                    audio_file = recorder.create_pipeline()
+
+                    self.rvc_stream_uuids[stream_uuid] = {
+                        "recorder": recorder,
+                        "audio_file": audio_file
+                    }
+                    
+                    stt = "PERFROMING_RECOGNITION"
+                    recorder.start_recording()
+
+                elif request.action == voice_agent_pb2.STOP:
+                    stream_uuid = request.stream_id
+
+                    recorder = self.rvc_stream_uuids[stream_uuid]["recorder"]
+                    audio_file = self.rvc_stream_uuids[stream_uuid]["audio_file"]
+                    del self.rvc_stream_uuids[stream_uuid]
+
+                    stt = "NOT_RECOGNIZED"
+                    recorder.stop_recording()
+                    stt = self.stt_model.recognize_from_file(audio_file)
+                    if stt not in ["FILE_NOT_FOUND", "FILE_FORMAT_INVALID", "NOT_RECOGNIZED"]:
+                        if request.nlu_model == voice_agent_pb2.SNIPS:
+                            extracted_intent = self.snips_interface.extract_intent(stt)
+                            intent, intent_actions = self.snips_interface.process_intent(extracted_intent)
+                            for action, value in intent_actions.items():
+                                intent_slots.append(voice_agent_pb2.IntentSlot(name=action, value=value))
+                        
+                        elif request.nlu_model == voice_agent_pb2.RASA:
+                            extracted_intent = self.rasa_interface.extract_intent(stt)
+                            intent, intent_actions = self.rasa_interface.process_intent(extracted_intent)
+                            for action, value in intent_actions.items():
+                                intent_slots.append(voice_agent_pb2.IntentSlot(name=action, value=value))
+
 
         # Process the request and generate a RecognizeResult
         response = voice_agent_pb2.RecognizeResult(
             command=stt,
             intent=intent,
-            intent_slots=intent_slots
+            intent_slots=intent_slots,
+            stream_id=stream_uuid
         )
         return response

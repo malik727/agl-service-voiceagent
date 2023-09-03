@@ -2,7 +2,7 @@ syntax = "proto3";
 
 service VoiceAgentService {
   rpc DetectWakeWord(Empty) returns (stream WakeWordStatus);
-  rpc RecognizeVoiceCommand(RecognizeControl) returns (RecognizeResult);
+  rpc RecognizeVoiceCommand(stream RecognizeControl) returns (RecognizeResult);
 }
 
 message Empty {}
@@ -30,6 +30,7 @@ message RecognizeControl {
   RecordAction action = 1;
   NLUModel nlu_model = 2;
   RecordMode record_mode = 3;
+  string stream_id = 4;
 }
 
 message IntentSlot {
@@ -41,4 +42,5 @@ message RecognizeResult {
   string command = 1;
   string intent = 2;
   repeated IntentSlot intent_slots = 3;
+  string stream_id = 4;
 }

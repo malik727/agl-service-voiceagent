@@ -10,6 +10,7 @@ GLib.threads_init()
 class AudioRecorder:
     def __init__(self, stt_model, audio_files_basedir, channels=1, sample_rate=16000, bits_per_sample=16):
         self.loop = GLib.MainLoop()
+        self.mode = None
         self.pipeline = None
         self.bus = None
         self.audio_files_basedir = audio_files_basedir
@@ -20,10 +21,13 @@ class AudioRecorder:
         self.audio_model = stt_model
         self.buffer_duration = 1  # Buffer audio for atleast 1 second
         self.audio_buffer = bytearray()
+        self.energy_threshold = 50000  # Adjust this threshold as needed
+        self.silence_frames_threshold = 10
+        self.frames_above_threshold = 0
     
 
-    def create_pipeline(self, mode="auto"):
-        print("Creating pipeline for audio recording in {} mode...".format(mode))
+    def create_pipeline(self):
+        print("Creating pipeline for audio recording in {} mode...".format(self.mode))
         self.pipeline = Gst.Pipeline()
         autoaudiosrc = Gst.ElementFactory.make("autoaudiosrc", "autoaudiosrc")
         queue = Gst.ElementFactory.make("queue", "queue")
@@ -49,19 +53,11 @@ class AudioRecorder:
 
         audio_file_name = f"{self.audio_files_basedir}{int(time.time())}.wav"
 
-        if mode == "auto":
-            appsink = Gst.ElementFactory.make("appsink", "appsink")
-            appsink.set_property("emit-signals", True)
-            appsink.set_property("sync", False)  # Set sync property to False to enable async processing
-            appsink.connect("new-sample", self.on_new_buffer, None)
-            self.pipeline.add(appsink)
-            capsfilter.link(appsink)
-        elif mode == "manual":
-            filesink = Gst.ElementFactory.make("filesink", "filesink")
-            filesink.set_property("location", audio_file_name)
-            self.pipeline.add(filesink)
-            capsfilter.link(wavenc)
-            wavenc.link(filesink)
+        filesink = Gst.ElementFactory.make("filesink", "filesink")
+        filesink.set_property("location", audio_file_name)
+        self.pipeline.add(filesink)
+        capsfilter.link(wavenc)
+        wavenc.link(filesink)
 
         self.bus = self.pipeline.get_bus()
         self.bus.add_signal_watch()
@@ -77,8 +73,13 @@ class AudioRecorder:
 
     def stop_recording(self):
         print("Stopping recording...")
+        self.frames_above_threshold = 0
         self.cleanup_pipeline()
         print("Recording finished!")
+
+    
+    def set_pipeline_mode(self, mode):
+        self.mode = mode
 
     
     # this method helps with error handling
@@ -86,20 +87,36 @@ class AudioRecorder:
         if message.type == Gst.MessageType.EOS:
             print("End-of-stream message received")
             self.stop_recording()
+
         elif message.type == Gst.MessageType.ERROR:
             err, debug_info = message.parse_error()
             print(f"Error received from element {message.src.get_name()}: {err.message}")
             print(f"Debugging information: {debug_info}")
             self.stop_recording()
+
         elif message.type == Gst.MessageType.WARNING:
             err, debug_info = message.parse_warning()
             print(f"Warning received from element {message.src.get_name()}: {err.message}")
             print(f"Debugging information: {debug_info}")
+
         elif message.type == Gst.MessageType.STATE_CHANGED:
             if isinstance(message.src, Gst.Pipeline):
                 old_state, new_state, pending_state = message.parse_state_changed()
                 print(("Pipeline state changed from %s to %s." %
                        (old_state.value_nick, new_state.value_nick)))
+                
+        elif self.mode == "auto" and message.type == Gst.MessageType.ELEMENT:
+            if message.get_structure().get_name() == "level":
+                rms = message.get_structure()["rms"][0]
+                if rms > self.energy_threshold:
+                    self.frames_above_threshold += 1
+                    # if self.frames_above_threshold >= self.silence_frames_threshold:
+                    #     self.start_recording()
+                else:
+                    if self.frames_above_threshold > 0:
+                        self.frames_above_threshold -= 1
+                        if self.frames_above_threshold == 0:
+                            self.stop_recording()
     
 
     def cleanup_pipeline(self):
