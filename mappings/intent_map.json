@@ -1,0 +1,10 @@
+{
+    "intents": {
+        "VolumeControlIntent": {
+            "signal": "Vehicle.AudioControl.Volume"
+        },
+        "TemperatureControlIntent": {
+            "signal": "Vehicle.HVAC.Temperature"
+        }
+    }
+}
