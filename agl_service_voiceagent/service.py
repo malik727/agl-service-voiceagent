@@ -38,7 +38,7 @@ def main():
     server_parser.add_argument('--audio-store-dir', required=False, help='Directory to store the generated audio files.')
     server_parser.add_argument('--log-store-dir', required=False, help='Directory to store the generated log files.')
 
-    client_parser.add_argument('--mode', required=True, help='Mode to run the client in. Supported modes: "wake_word", "auto" and "manual".')
+    client_parser.add_argument('--mode', required=True, help='Mode to run the client in. Supported modes: "wake-word", "auto" and "manual".')
     client_parser.add_argument('--nlu', required=True, help='NLU engine to use. Supported NLU egnines: "snips" and "rasa".')
 
     args = parser.parse_args()

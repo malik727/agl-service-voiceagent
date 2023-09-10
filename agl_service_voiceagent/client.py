@@ -5,9 +5,9 @@ from generated import voice_agent_pb2_grpc
 from utils.config import get_config_value
 
 # following code is only reqired for logging
-# import logging
-# logging.basicConfig()
-# logging.getLogger("grpc").setLevel(logging.DEBUG)
+import logging
+logging.basicConfig()
+logging.getLogger("grpc").setLevel(logging.DEBUG)
 
 SERVER_URL = get_config_value('SERVER_ADDRESS') + ":" + str(get_config_value('SERVER_PORT'))
 
@@ -44,8 +44,18 @@ def run_client(mode, nlu_model):
             record_stop_request = voice_agent_pb2.RecognizeControl(action=voice_agent_pb2.STOP, nlu_model=nlu_model, record_mode=voice_agent_pb2.MANUAL, stream_id=stream_id)
             record_result = stub.RecognizeVoiceCommand(iter([record_stop_request]))
             print("Voice command recorded!")
+            
+            status = "Uh oh! Status is unknown."
+            if record_result.status == voice_agent_pb2.REC_SUCCESS:
+                status = "Yay! Status is success."
+            elif record_result.status == voice_agent_pb2.VOICE_NOT_RECOGNIZED:
+                status = "Voice not recognized."
+            elif record_result.status == voice_agent_pb2.INTENT_NOT_RECOGNIZED:
+                status = "Intent not recognized."
+
             # Process the response
             print("Command:", record_result.command)
+            print("Status:", status)
             print("Intent:", record_result.intent)
             for slot in record_result.intent_slots:
                 print("Slot Name:", slot.name)

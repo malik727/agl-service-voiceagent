@@ -2,23 +2,32 @@ import os
 import json
 import vosk
 import wave
+from utils.common import generate_unique_uuid
 
 class STTModel:
     def __init__(self, model_path, sample_rate=16000):
         self.sample_rate = sample_rate
         self.model = vosk.Model(model_path)
-        self.recognizer = vosk.KaldiRecognizer(self.model, self.sample_rate)
+        self.recognizer = {}
     
-    def init_rec(self, audio_data):
-        return self.recognizer.AcceptWaveform(audio_data)
+    def setup_recognizer(self):
+        uuid = generate_unique_uuid(6)
+        self.recognizer[uuid] = vosk.KaldiRecognizer(self.model, self.sample_rate)
+        return uuid
 
-    def recognize(self):
-        self.recognizer.SetWords(True)
-        result = json.loads(self.recognizer.Result())
-        self.recognizer.Reset()
+    def init_recognition(self, uuid, audio_data):
+        return self.recognizer[uuid].AcceptWaveform(audio_data)
+
+    def recognize(self, uuid, partial=False):
+        self.recognizer[uuid].SetWords(True)
+        if partial:
+            result = json.loads(self.recognizer[uuid].PartialResult())
+        else:
+            result = json.loads(self.recognizer[uuid].Result())
+            self.recognizer[uuid].Reset()
         return result
     
-    def recognize_from_file(self, filename):
+    def recognize_from_file(self, uuid, filename):
         if not os.path.exists(filename):
             print(f"Audio file '{filename}' not found.")
             return "FILE_NOT_FOUND"
@@ -29,12 +38,21 @@ class STTModel:
             return "FILE_FORMAT_INVALID"
         
         audio_data = wf.readframes(wf.getnframes())
-        
-        if self.init_rec(audio_data):
-            result = self.recognize()
-            self.recognizer.Reset()
-            return result['text']
+        if audio_data:
+            # self.init_recognition(uuid, audio_data)
+            # result = self.recognize(uuid)
+            # return result['text']
+            if self.init_recognition(uuid, audio_data):
+                result = self.recognize(uuid)
+                return result['text']
+            else:
+                result = self.recognize(uuid, partial=True)
+                return result['partial']
+
         else:
-            self.recognizer.Reset()
             print("Voice not recognized. Please speak again...")
-            return "NOT_RECOGNIZED"
+            return "VOICE_NOT_RECOGNIZED"
+    
+    def cleanup_recognizer(self, uuid):
+        del self.recognizer[uuid]
+    

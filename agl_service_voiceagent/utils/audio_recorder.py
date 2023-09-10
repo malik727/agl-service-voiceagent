@@ -29,12 +29,12 @@ class AudioRecorder:
     def create_pipeline(self):
         print("Creating pipeline for audio recording in {} mode...".format(self.mode))
         self.pipeline = Gst.Pipeline()
-        autoaudiosrc = Gst.ElementFactory.make("autoaudiosrc", "autoaudiosrc")
-        queue = Gst.ElementFactory.make("queue", "queue")
-        audioconvert = Gst.ElementFactory.make("audioconvert", "audioconvert")
-        wavenc = Gst.ElementFactory.make("wavenc", "wavenc")
+        autoaudiosrc = Gst.ElementFactory.make("autoaudiosrc", None)
+        queue = Gst.ElementFactory.make("queue", None)
+        audioconvert = Gst.ElementFactory.make("audioconvert", None)
+        wavenc = Gst.ElementFactory.make("wavenc", None)
 
-        capsfilter = Gst.ElementFactory.make("capsfilter", "capsfilter")
+        capsfilter = Gst.ElementFactory.make("capsfilter", None)
         caps = Gst.Caps.new_empty_simple("audio/x-raw")
         caps.set_value("format", "S16LE")
         caps.set_value("rate", self.sample_rate)
@@ -53,7 +53,7 @@ class AudioRecorder:
 
         audio_file_name = f"{self.audio_files_basedir}{int(time.time())}.wav"
 
-        filesink = Gst.ElementFactory.make("filesink", "filesink")
+        filesink = Gst.ElementFactory.make("filesink", None)
         filesink.set_property("location", audio_file_name)
         self.pipeline.add(filesink)
         capsfilter.link(wavenc)

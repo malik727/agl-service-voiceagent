@@ -1,3 +1,4 @@
+import os
 import uuid
 import json
 
@@ -18,3 +19,12 @@ def load_json_file(file_path):
                 return json.load(file)
         except FileNotFoundError:
             raise ValueError(f"File '{file_path}' not found.")
+
+def delete_file(file_path):
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except Exception as e:
+            print(f"Error deleting '{file_path}': {e}")
+    else:
+        print(f"File '{file_path}' does not exist.")

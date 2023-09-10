@@ -1,15 +1,13 @@
 syntax = "proto3";
 
+
 service VoiceAgentService {
+  rpc CheckServiceStatus(Empty) returns (ServiceStatus);
   rpc DetectWakeWord(Empty) returns (stream WakeWordStatus);
   rpc RecognizeVoiceCommand(stream RecognizeControl) returns (RecognizeResult);
+  rpc ExecuteVoiceCommand(ExecuteInput) returns (ExecuteResult);
 }
 
-message Empty {}
-
-message WakeWordStatus {
-  bool status = 1;
-}
 
 enum RecordAction {
   START = 0;
@@ -24,6 +22,34 @@ enum NLUModel {
 enum RecordMode {
   MANUAL = 0;
   AUTO = 1;
+}
+
+enum RecognizeStatusType {
+  REC_ERROR = 0;
+  REC_SUCCESS = 1;
+  REC_PROCESSING = 2;
+  VOICE_NOT_RECOGNIZED = 3;
+  INTENT_NOT_RECOGNIZED = 4;
+}
+
+enum ExecuteStatusType {
+  EXEC_ERROR = 0;
+  EXEC_SUCCESS = 1;
+  KUKSA_CONN_ERROR = 2;
+  INTENT_NOT_SUPPORTED = 3;
+  INTENT_SLOTS_INCOMPLETE = 4;
+}
+
+
+message Empty {}
+
+message ServiceStatus {
+  string version = 1;
+  bool status = 2;  
+}
+
+message WakeWordStatus {
+  bool status = 1;
 }
 
 message RecognizeControl {
@@ -43,4 +69,14 @@ message RecognizeResult {
   string intent = 2;
   repeated IntentSlot intent_slots = 3;
   string stream_id = 4;
+  RecognizeStatusType status = 5;
+}
+
+message ExecuteInput {
+  string intent = 1;
+  repeated IntentSlot intent_slots = 2;
+}
+
+message ExecuteResult {
+  ExecuteStatusType status = 1;
 }

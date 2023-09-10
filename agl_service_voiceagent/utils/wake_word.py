@@ -17,7 +17,8 @@ class WakeWordDetector:
         self.channels = channels
         self.bits_per_sample = bits_per_sample
         self.frame_size = int(self.sample_rate * 0.02)
-        self.stt_model = stt_model # Speech to text model
+        self.stt_model = stt_model # Speech to text model recognizer
+        self.recognizer_uuid = stt_model.setup_recognizer() 
         self.buffer_duration = 1  # Buffer audio for atleast 1 second
         self.audio_buffer = bytearray()
     
@@ -27,19 +28,19 @@ class WakeWordDetector:
     def create_pipeline(self):
         print("Creating pipeline for Wake Word Detection...")
         self.pipeline = Gst.Pipeline()
-        autoaudiosrc = Gst.ElementFactory.make("autoaudiosrc", "autoaudiosrc")
-        queue = Gst.ElementFactory.make("queue", "queue")
-        audioconvert = Gst.ElementFactory.make("audioconvert", "audioconvert")
-        wavenc = Gst.ElementFactory.make("wavenc", "wavenc")
+        autoaudiosrc = Gst.ElementFactory.make("autoaudiosrc", None)
+        queue = Gst.ElementFactory.make("queue", None)
+        audioconvert = Gst.ElementFactory.make("audioconvert", None)
+        wavenc = Gst.ElementFactory.make("wavenc", None)
 
-        capsfilter = Gst.ElementFactory.make("capsfilter", "capsfilter")
+        capsfilter = Gst.ElementFactory.make("capsfilter", None)
         caps = Gst.Caps.new_empty_simple("audio/x-raw")
         caps.set_value("format", "S16LE")
         caps.set_value("rate", self.sample_rate)
         caps.set_value("channels", self.channels)
         capsfilter.set_property("caps", caps)
 
-        appsink = Gst.ElementFactory.make("appsink", "appsink")
+        appsink = Gst.ElementFactory.make("appsink", None)
         appsink.set_property("emit-signals", True)
         appsink.set_property("sync", False)  # Set sync property to False to enable async processing
         appsink.connect("new-sample", self.on_new_buffer, None)
@@ -71,11 +72,12 @@ class WakeWordDetector:
 
         return Gst.FlowReturn.OK
     
+
     def process_audio_buffer(self):
         # Process the accumulated audio data using the audio model
         audio_data = bytes(self.audio_buffer)
-        if self.stt_model.init_rec(audio_data):
-            stt_result = self.stt_model.recognize()
+        if self.stt_model.init_recognition(self.recognizer_uuid, audio_data):
+            stt_result = self.stt_model.recognize(self.recognizer_uuid)
             print("STT Result: ", stt_result)
             if self.wake_word in stt_result["text"]:
                 self.wake_word_detected = True
@@ -83,6 +85,11 @@ class WakeWordDetector:
                 self.pipeline.send_event(Gst.Event.new_eos())
 
         self.audio_buffer.clear()  # Clear the buffer
+    
+
+    def send_eos(self):
+        self.pipeline.send_event(Gst.Event.new_eos())
+        self.audio_buffer.clear()
 
 
     def start_listening(self):
@@ -124,3 +131,4 @@ class WakeWordDetector:
             print("Pipeline cleanup complete!")
             self.bus = None
             self.pipeline = None
+            self.stt_model.cleanup_recognizer(self.recognizer_uuid)
