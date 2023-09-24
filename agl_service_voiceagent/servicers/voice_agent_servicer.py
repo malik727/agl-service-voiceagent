@@ -1,15 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (c) 2023 Malik Talha
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import grpc
 import time
 import threading
-from generated import voice_agent_pb2
-from generated import voice_agent_pb2_grpc
-from utils.audio_recorder import AudioRecorder
-from utils.wake_word import WakeWordDetector
-from utils.stt_model import STTModel
-from utils.config import get_config_value
-from nlu.snips_interface import SnipsInterface
-from nlu.rasa_interface import RASAInterface
-from utils.common import generate_unique_uuid, delete_file
+from agl_service_voiceagent.generated import voice_agent_pb2
+from agl_service_voiceagent.generated import voice_agent_pb2_grpc
+from agl_service_voiceagent.utils.audio_recorder import AudioRecorder
+from agl_service_voiceagent.utils.wake_word import WakeWordDetector
+from agl_service_voiceagent.utils.stt_model import STTModel
+from agl_service_voiceagent.utils.config import get_config_value
+from agl_service_voiceagent.utils.common import generate_unique_uuid, delete_file
+from agl_service_voiceagent.nlu.snips_interface import SnipsInterface
+from agl_service_voiceagent.nlu.rasa_interface import RASAInterface
 
 
 class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):

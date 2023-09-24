@@ -1,3 +1,19 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (c) 2023 Malik Talha
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import sys
 
@@ -9,10 +25,10 @@ generated_dir = os.path.join(current_dir, "generated")
 sys.path.append(generated_dir)
 
 import argparse
-from utils.config import update_config_value, get_config_value
-from utils.common import add_trailing_slash
-from server import run_server
-from client import run_client
+from agl_service_voiceagent.utils.config import update_config_value, get_config_value
+from agl_service_voiceagent.utils.common import add_trailing_slash
+from agl_service_voiceagent.server import run_server
+from agl_service_voiceagent.client import run_client
 
 
 def print_version():
