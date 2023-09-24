@@ -1,18 +1,27 @@
-from utils.config import get_config_value
-from utils.common import load_json_file
+from agl_service_voiceagent.utils.config import get_config_value
+from agl_service_voiceagent.utils.common import load_json_file
+
 
 class Intent2VSSMapper:
     def __init__(self):
-        self.intent_map = load_json_file(get_config_value("intent_map_file", "Mapper")).get("intents", {})
-        self.vss_signals = load_json_file(get_config_value("vss_signals_file", "Mapper")).get("signals", {})
+        intents_vss_map_file = get_config_value("intents_vss_map", "Mapper")
+        vss_signals_spec_file = get_config_value("vss_signals_spec", "Mapper")
+        self.intents_vss_map = load_json_file(intents_vss_map_file).get("intents", {})
+        self.vss_signals_spec = load_json_file(vss_signals_spec_file).get("signals", {})
 
 
     def map_intent_to_signal(self, intent_name):
-        intent_data = self.intent_map.get(intent_name, None)
+        intent_data = self.intents_vss_map.get(intent_name, None)
         if intent_data:
-            signal_name = intent_data.get("signal", None)
-            if signal_name:
-                return self.vss_signals.get(signal_name, None)
+            result = []
+            signals = intent_data.get("signals", [])
+
+            for signal in signals:
+                signal_info = self.vss_signals_spec.get(signal, {})
+                if signal_info:
+                    result.append(signal_info)
+
+                return result
         return None
 
 
