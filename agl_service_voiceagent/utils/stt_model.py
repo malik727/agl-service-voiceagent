@@ -9,6 +9,7 @@ class STTModel:
         self.sample_rate = sample_rate
         self.model = vosk.Model(model_path)
         self.recognizer = {}
+        self.chunk_size = 1024
     
     def setup_recognizer(self):
         uuid = generate_unique_uuid(6)
@@ -37,11 +38,16 @@ class STTModel:
             print("Audio file must be WAV format mono PCM.")
             return "FILE_FORMAT_INVALID"
         
-        audio_data = wf.readframes(wf.getnframes())
+        # audio_data = wf.readframes(wf.getnframes())
+        # we need to perform chunking as target AGL system can't handle an entire audio file
+        audio_data = b""
+        while True:
+            chunk = wf.readframes(self.chunk_size)
+            if not chunk:
+                break  # End of file reached
+            audio_data += chunk
+
         if audio_data:
-            # self.init_recognition(uuid, audio_data)
-            # result = self.recognize(uuid)
-            # return result['text']
             if self.init_recognition(uuid, audio_data):
                 result = self.recognize(uuid)
                 return result['text']
