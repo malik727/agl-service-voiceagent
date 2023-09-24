@@ -1,6 +1,6 @@
 {
     "signals": {
-        "Vehicle.AudioControl.Volume": {
+        "Vehicle.Cabin.Infotainment.Media.Volume": {
             "default_value": 0,
             "default_action": "set",
             "actions": ["set", "increase", "decrease"],
@@ -13,7 +13,46 @@
                 "additional": []
             }
         },
-        "Vehicle.HVAC.Temperature": {
+        "Vehicle.Cabin.HVAC.Station.Row1.Left.FanSpeed": {
+            "default_value": 25,
+            "default_action": "set",
+            "actions": ["set", "increase", "decrease"],
+            "default_fallback": true,
+            "values": {
+                "ranged": true,
+                "start": 1,
+                "end": 100,
+                "ignore": [],
+                "additional": []
+            }
+        },
+        "Vehicle.Cabin.HVAC.Station.Row1.Right.FanSpeed": {
+            "default_value": 25,
+            "default_action": "set",
+            "actions": ["set", "increase", "decrease"],
+            "default_fallback": true,
+            "values": {
+                "ranged": true,
+                "start": 1,
+                "end": 100,
+                "ignore": [],
+                "additional": []
+            }
+        },
+        "Vehicle.Cabin.HVAC.Station.Row2.Left.FanSpeed": {
+            "default_value": 25,
+            "default_action": "set",
+            "actions": ["set", "increase", "decrease"],
+            "default_fallback": true,
+            "values": {
+                "ranged": true,
+                "start": 1,
+                "end": 100,
+                "ignore": [],
+                "additional": []
+            }
+        },
+        "Vehicle.Cabin.HVAC.Station.Row2.Right.FanSpeed": {
             "default_value": 25,
             "default_action": "set",
             "actions": ["set", "increase", "decrease"],
