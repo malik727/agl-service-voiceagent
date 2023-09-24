@@ -2,7 +2,7 @@ import os
 import json
 import vosk
 import wave
-from utils.common import generate_unique_uuid
+from agl_service_voiceagent.utils.common import generate_unique_uuid
 
 class STTModel:
     def __init__(self, model_path, sample_rate=16000):

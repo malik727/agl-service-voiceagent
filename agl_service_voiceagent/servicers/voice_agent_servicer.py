@@ -1,15 +1,15 @@
 import grpc
 import time
 import threading
-from generated import voice_agent_pb2
-from generated import voice_agent_pb2_grpc
-from utils.audio_recorder import AudioRecorder
-from utils.wake_word import WakeWordDetector
-from utils.stt_model import STTModel
-from utils.config import get_config_value
-from nlu.snips_interface import SnipsInterface
-from nlu.rasa_interface import RASAInterface
-from utils.common import generate_unique_uuid, delete_file
+from agl_service_voiceagent.generated import voice_agent_pb2
+from agl_service_voiceagent.generated import voice_agent_pb2_grpc
+from agl_service_voiceagent.utils.audio_recorder import AudioRecorder
+from agl_service_voiceagent.utils.wake_word import WakeWordDetector
+from agl_service_voiceagent.utils.stt_model import STTModel
+from agl_service_voiceagent.utils.config import get_config_value
+from agl_service_voiceagent.utils.common import generate_unique_uuid, delete_file
+from agl_service_voiceagent.nlu.snips_interface import SnipsInterface
+from agl_service_voiceagent.nlu.rasa_interface import RASAInterface
 
 
 class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):

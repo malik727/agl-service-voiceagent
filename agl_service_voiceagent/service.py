@@ -9,10 +9,10 @@ generated_dir = os.path.join(current_dir, "generated")
 sys.path.append(generated_dir)
 
 import argparse
-from utils.config import update_config_value, get_config_value
-from utils.common import add_trailing_slash
-from server import run_server
-from client import run_client
+from agl_service_voiceagent.utils.config import update_config_value, get_config_value
+from agl_service_voiceagent.utils.common import add_trailing_slash
+from agl_service_voiceagent.server import run_server
+from agl_service_voiceagent.client import run_client
 
 
 def print_version():

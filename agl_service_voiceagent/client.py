@@ -1,8 +1,8 @@
 import time
 import grpc
-from generated import voice_agent_pb2
-from generated import voice_agent_pb2_grpc
-from utils.config import get_config_value
+from agl_service_voiceagent.generated import voice_agent_pb2
+from agl_service_voiceagent.generated import voice_agent_pb2_grpc
+from agl_service_voiceagent.utils.config import get_config_value
 
 # following code is only reqired for logging
 import logging
