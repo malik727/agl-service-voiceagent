@@ -3,9 +3,6 @@ from setuptools import setup, find_packages
 packages = [p for p in find_packages()
             if "tests" not in p and "debug" not in p]
 
-# Define a list of data files to include in the package
-data_files = [('.', ['config.ini'])]
-
 setup(
     name="agl_service_voiceagent",
     version="0.2.0",
@@ -28,11 +25,11 @@ setup(
     license="Apache-2.0",
     python_requires=">=3.9",
     packages=packages,
+    package_data={'agl_service_voiceagent': ['config.ini']},
     include_package_data=True,
     entry_points={
         "console_scripts": [
             "voiceagent-service=agl_service_voiceagent.service:main"
         ],
-    },
-    data_files=data_files
+    }
 )
