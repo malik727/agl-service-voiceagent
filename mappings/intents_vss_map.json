@@ -1,16 +1,24 @@
 {
     "intents": {
-        "VolumeControlIntent": {
+        "VolumeControl": {
             "signals": [
                 "Vehicle.Cabin.Infotainment.Media.Volume"
             ]
         },
-        "HVACFanSpeedIntent": {
+        "HVACFanSpeed": {
             "signals": [
                 "Vehicle.Cabin.HVAC.Station.Row1.Left.FanSpeed",
                 "Vehicle.Cabin.HVAC.Station.Row1.Right.FanSpeed",
                 "Vehicle.Cabin.HVAC.Station.Row2.Left.FanSpeed",
                 "Vehicle.Cabin.HVAC.Station.Row2.Right.FanSpeed"
+            ]
+        },
+        "HVACTemperature": {
+            "signals": [
+                "Vehicle.Cabin.HVAC.Station.Row1.Left.Temperature",
+                "Vehicle.Cabin.HVAC.Station.Row1.Right.Temperature",
+                "Vehicle.Cabin.HVAC.Station.Row2.Left.Temperature",
+                "Vehicle.Cabin.HVAC.Station.Row2.Right.Temperature"
             ]
         }
     }

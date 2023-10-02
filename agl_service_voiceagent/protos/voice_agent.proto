@@ -78,5 +78,6 @@ message ExecuteInput {
 }
 
 message ExecuteResult {
-  ExecuteStatusType status = 1;
+  string response = 1;
+  ExecuteStatusType status = 2;
 }

@@ -48,3 +48,67 @@ def delete_file(file_path):
             print(f"Error deleting '{file_path}': {e}")
     else:
         print(f"File '{file_path}' does not exist.")
+
+
+def words_to_number(words):
+    word_to_number = {
+        'one': 1,
+        'two': 2,
+        'three': 3,
+        'four': 4,
+        'five': 5,
+        'six': 6,
+        'seven': 7,
+        'eight': 8,
+        'nine': 9,
+        'ten': 10,
+        'eleven': 11,
+        'twelve': 12,
+        'thirteen': 13,
+        'fourteen': 14,
+        'fifteen': 15,
+        'sixteen': 16,
+        'seventeen': 17,
+        'eighteen': 18,
+        'nineteen': 19,
+        'twenty': 20,
+        'thirty': 30,
+        'forty': 40,
+        'fourty': 40,
+        'fifty': 50,
+        'sixty': 60,
+        'seventy': 70,
+        'eighty': 80,
+        'ninety': 90
+    }
+
+    # Split the input words and initialize total and current number
+    words = words.split()
+
+    if len(words) == 1:
+        if words[0] in ["zero", "min", "minimum"]:
+            return 0
+        
+        elif words[0] in ["half", "halfway"]:
+            return 50
+        
+        elif words[0] in ["max", "maximum", "full", "fully", "completely", "hundred"]:
+            return 100
+
+
+    total = 0
+    current_number = 0
+
+    for word in words:
+        if word in word_to_number:
+            current_number += word_to_number[word]
+        elif word == 'hundred':
+            current_number *= 100
+        else:
+            total += current_number
+            current_number = 0
+
+    total += current_number
+
+    # we return number in str format because kuksa expects str input
+    return str(total) or None

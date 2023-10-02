@@ -1,68 +1,309 @@
 {
     "signals": {
         "Vehicle.Cabin.Infotainment.Media.Volume": {
-            "default_value": 0,
-            "default_action": "set",
-            "actions": ["set", "increase", "decrease"],
-            "default_fallback": true,
+            "default_value": 15,
+            "default_change_factor": 5,
+            "actions": {
+                "set": {
+                    "intents": ["volume_control_action"],
+                    "synonyms": ["set", "change", "adjust"]
+                },
+                "increase": {
+                    "intents":["volume_control_action"],
+                    "synonyms": ["increase", "up", "raise", "crank up", "louder"],
+                    "modifier_intents": ["to_or_by"]
+                }, 
+                "decrease": {
+                    "intents": ["volume_control_action"],
+                    "synonyms": ["decrease", "lower", "down", "quieter", "reduce"],
+                    "modifier_intents": ["to_or_by"]
+                }
+            },
             "values": {
                 "ranged": true,
                 "start": 1,
                 "end": 100,
                 "ignore": [],
                 "additional": []
+            },
+            "default_fallback": true,
+            "value_set_intents": {
+                "numeric_value": {
+                    "datatype": "number",
+                    "unit": "percent"
+                }
             }
         },
         "Vehicle.Cabin.HVAC.Station.Row1.Left.FanSpeed": {
             "default_value": 25,
-            "default_action": "set",
-            "actions": ["set", "increase", "decrease"],
-            "default_fallback": true,
+            "default_change_factor": 5,
+            "actions": {
+                "set": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["set", "change", "adjust"]
+                },
+                "increase": {
+                    "intents":["hvac_fan_speed_action"],
+                    "synonyms": ["increase", "up", "raise", "crank up", "louder"],
+                    "modifier_intents": ["to_or_by"]
+                }, 
+                "decrease": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["decrease", "lower", "down", "quieter", "reduce"],
+                    "modifier_intents": ["to_or_by"]
+                }
+            },
             "values": {
                 "ranged": true,
                 "start": 1,
                 "end": 100,
                 "ignore": [],
                 "additional": []
+            },
+            "default_fallback": true,
+            "value_set_intents": {
+                "numeric_value": {
+                    "datatype": "number",
+                    "unit": "percent"
+                }
             }
         },
         "Vehicle.Cabin.HVAC.Station.Row1.Right.FanSpeed": {
             "default_value": 25,
-            "default_action": "set",
-            "actions": ["set", "increase", "decrease"],
-            "default_fallback": true,
+            "default_change_factor": 5,
+            "actions": {
+                "set": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["set", "change", "adjust"]
+                },
+                "increase": {
+                    "intents":["hvac_fan_speed_action"],
+                    "synonyms": ["increase", "up", "raise", "crank up", "louder"],
+                    "modifier_intents": ["to_or_by"]
+                }, 
+                "decrease": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["decrease", "lower", "down", "quieter", "reduce"],
+                    "modifier_intents": ["to_or_by"]
+                }
+            },
             "values": {
                 "ranged": true,
                 "start": 1,
                 "end": 100,
                 "ignore": [],
                 "additional": []
+            },
+            "default_fallback": true,
+            "value_set_intents": {
+                "numeric_value": {
+                    "datatype": "number",
+                    "unit": "percent"
+                }
             }
         },
         "Vehicle.Cabin.HVAC.Station.Row2.Left.FanSpeed": {
             "default_value": 25,
-            "default_action": "set",
-            "actions": ["set", "increase", "decrease"],
-            "default_fallback": true,
+            "default_change_factor": 5,
+            "actions": {
+                "set": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["set", "change", "adjust"]
+                },
+                "increase": {
+                    "intents":["hvac_fan_speed_action"],
+                    "synonyms": ["increase", "up", "raise", "crank up", "louder"],
+                    "modifier_intents": ["to_or_by"]
+                }, 
+                "decrease": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["decrease", "lower", "down", "quieter", "reduce"],
+                    "modifier_intents": ["to_or_by"]
+                }
+            },
             "values": {
                 "ranged": true,
                 "start": 1,
                 "end": 100,
                 "ignore": [],
                 "additional": []
+            },
+            "default_fallback": true,
+            "value_set_intents": {
+                "numeric_value": {
+                    "datatype": "number",
+                    "unit": "percent"
+                }
             }
         },
         "Vehicle.Cabin.HVAC.Station.Row2.Right.FanSpeed": {
             "default_value": 25,
-            "default_action": "set",
-            "actions": ["set", "increase", "decrease"],
-            "default_fallback": true,
+            "default_change_factor": 5,
+            "actions": {
+                "set": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["set", "change", "adjust"]
+                },
+                "increase": {
+                    "intents":["hvac_fan_speed_action"],
+                    "synonyms": ["increase", "up", "raise", "crank up", "louder"],
+                    "modifier_intents": ["to_or_by"]
+                }, 
+                "decrease": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["decrease", "lower", "down", "quieter", "reduce"],
+                    "modifier_intents": ["to_or_by"]
+                }
+            },
             "values": {
                 "ranged": true,
                 "start": 1,
                 "end": 100,
                 "ignore": [],
                 "additional": []
+            },
+            "default_fallback": true,
+            "value_set_intents": {
+                "numeric_value": {
+                    "datatype": "number",
+                    "unit": "percent"
+                }
+            }
+        },
+        "Vehicle.Cabin.HVAC.Station.Row1.Left.Temperature": {
+            "default_value": 25,
+            "default_change_factor": 2,
+            "actions": {
+                "set": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["set", "change", "adjust"]
+                },
+                "increase": {
+                    "intents":["hvac_fan_speed_action"],
+                    "synonyms": ["increase", "up", "boost", "boosting", "raise", "heat", "warm", "warmer"],
+                    "modifier_intents": ["to_or_by"]
+                }, 
+                "decrease": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["decrease", "lower", "down", "cool", "colder", "reduce", "back"],
+                    "modifier_intents": ["to_or_by"]
+                }
+            },
+            "values": {
+                "ranged": true,
+                "start": 1,
+                "end": 100,
+                "ignore": [],
+                "additional": []
+            },
+            "default_fallback": true,
+            "value_set_intents": {
+                "numeric_value": {
+                    "datatype": "number",
+                    "unit": "celcius"
+                }
+            }
+        },
+        "Vehicle.Cabin.HVAC.Station.Row1.Right.Temperature": {
+            "default_value": 25,
+            "default_change_factor": 2,
+            "actions": {
+                "set": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["set", "change", "adjust"]
+                },
+                "increase": {
+                    "intents":["hvac_fan_speed_action"],
+                    "synonyms": ["increase", "up", "boost", "boosting", "raise", "heat", "warm", "warmer"],
+                    "modifier_intents": ["to_or_by"]
+                }, 
+                "decrease": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["decrease", "lower", "down", "cool", "colder", "reduce", "back"],
+                    "modifier_intents": ["to_or_by"]
+                }
+            },
+            "values": {
+                "ranged": true,
+                "start": 1,
+                "end": 100,
+                "ignore": [],
+                "additional": []
+            },
+            "default_fallback": true,
+            "value_set_intents": {
+                "numeric_value": {
+                    "datatype": "number",
+                    "unit": "celcius"
+                }
+            }
+        },
+        "Vehicle.Cabin.HVAC.Station.Row2.Left.Temperature": {
+            "default_value": 25,
+            "default_change_factor": 2,
+            "actions": {
+                "set": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["set", "change", "adjust"]
+                },
+                "increase": {
+                    "intents":["hvac_fan_speed_action"],
+                    "synonyms": ["increase", "up", "boost", "boosting", "raise", "heat", "warm", "warmer"],
+                    "modifier_intents": ["to_or_by"]
+                }, 
+                "decrease": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["decrease", "lower", "down", "cool", "colder", "reduce", "back"],
+                    "modifier_intents": ["to_or_by"]
+                }
+            },
+            "values": {
+                "ranged": true,
+                "start": 1,
+                "end": 100,
+                "ignore": [],
+                "additional": []
+            },
+            "default_fallback": true,
+            "value_set_intents": {
+                "numeric_value": {
+                    "datatype": "number",
+                    "unit": "celcius"
+                }
+            }
+        },
+        "Vehicle.Cabin.HVAC.Station.Row2.Right.Temperature": {
+            "default_value": 25,
+            "default_change_factor": 2,
+            "actions": {
+                "set": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["set", "change", "adjust"]
+                },
+                "increase": {
+                    "intents":["hvac_fan_speed_action"],
+                    "synonyms": ["increase", "up", "boost", "boosting", "raise", "heat", "warm", "warmer"],
+                    "modifier_intents": ["to_or_by"]
+                }, 
+                "decrease": {
+                    "intents": ["hvac_fan_speed_action"],
+                    "synonyms": ["decrease", "lower", "down", "cool", "colder", "reduce", "back"],
+                    "modifier_intents": ["to_or_by"]
+                }
+            },
+            "values": {
+                "ranged": true,
+                "start": 1,
+                "end": 100,
+                "ignore": [],
+                "additional": []
+            },
+            "default_fallback": true,
+            "value_set_intents": {
+                "numeric_value": {
+                    "datatype": "number",
+                    "unit": "celcius"
+                }
             }
         }
     }

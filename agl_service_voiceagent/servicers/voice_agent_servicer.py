@@ -17,15 +17,17 @@
 import grpc
 import time
 import threading
-from agl_service_voiceagent.generated import voice_agent_pb2
-from agl_service_voiceagent.generated import voice_agent_pb2_grpc
-from agl_service_voiceagent.utils.audio_recorder import AudioRecorder
-from agl_service_voiceagent.utils.wake_word import WakeWordDetector
-from agl_service_voiceagent.utils.stt_model import STTModel
-from agl_service_voiceagent.utils.config import get_config_value
-from agl_service_voiceagent.utils.common import generate_unique_uuid, delete_file
-from agl_service_voiceagent.nlu.snips_interface import SnipsInterface
-from agl_service_voiceagent.nlu.rasa_interface import RASAInterface
+from generated import voice_agent_pb2
+from generated import voice_agent_pb2_grpc
+from utils.audio_recorder import AudioRecorder
+from utils.wake_word import WakeWordDetector
+from utils.stt_model import STTModel
+from utils.kuksa_interface import KuksaInterface
+from utils.mapper import Intent2VSSMapper
+from utils.config import get_config_value
+from utils.common import generate_unique_uuid, delete_file
+from nlu.snips_interface import SnipsInterface
+from nlu.rasa_interface import RASAInterface
 
 
 class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
@@ -50,6 +52,10 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         self.rasa_interface = RASAInterface(self.rasa_server_port, self.rasa_model_path, self.base_log_dir)
         self.rasa_interface.start_server()
         self.rvc_stream_uuids = {}
+        self.kuksa_client = KuksaInterface()
+        self.kuksa_client.connect_kuksa_client()
+        self.kuksa_client.authorize_kuksa_client()
+        self.mapper = Intent2VSSMapper()
 
 
     def CheckServiceStatus(self, request, context):
@@ -153,4 +159,58 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
             stream_id=stream_uuid,
             status=status
         )
+        return response
+
+
+    def ExecuteVoiceCommand(self, request, context):
+        intent = request.intent
+        intent_slots = request.intent_slots
+        processed_slots = []
+        for slot in intent_slots:
+            slot_name = slot.name
+            slot_value = slot.value
+            processed_slots.append({"name": slot_name, "value": slot_value})
+
+        execution_list = self.mapper.parse_intent(intent, processed_slots)
+        exec_response = f"Sorry, I failed to execute command against intent '{intent}'. Maybe try again with more specific instructions."
+        exec_status = False
+
+        for execution_item in execution_list:
+            print(execution_item)
+            action = execution_item["action"]
+            signal = execution_item["signal"]
+
+            if action == "set" and "value" in execution_item:
+                value = execution_item["value"]
+                if self.kuksa_client.send_values(signal, value):
+                    exec_response = f"Yay, I successfully updated the intent '{intent}' to value '{value}'."
+                    exec_status = True
+            
+            elif action in ["increase", "decrease"]:
+                if "value" in execution_item:
+                    value = execution_item["value"]
+                    if self.kuksa_client.send_values(signal, value):
+                        exec_response = f"Yay, I successfully updated the intent '{intent}' to value '{value}'."
+                        exec_status = True
+                
+                elif "factor" in execution_item:
+                    factor = execution_item["factor"]
+                    current_value = self.kuksa_client.get_value(signal)
+                    if current_value:
+                        current_value = int(current_value)
+                        if action == "increase":
+                            value = current_value + factor
+                            value = str(value)
+                        elif action == "decrease":
+                            value = current_value - factor
+                            value = str(value)
+                        if self.kuksa_client.send_values(signal, value):
+                            exec_response = f"Yay, I successfully updated the intent '{intent}' to value '{value}'."
+                            exec_status = True
+
+        response = voice_agent_pb2.ExecuteResult(
+            response=exec_response,
+            status=exec_status
+        )
+
         return response
