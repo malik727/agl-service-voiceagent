@@ -17,6 +17,60 @@ class Intent2VSSMapper:
         vss_signals_spec_file = get_config_value("vss_signals_spec", "Mapper")
         self.intents_vss_map = load_json_file(intents_vss_map_file).get("intents", {})
         self.vss_signals_spec = load_json_file(vss_signals_spec_file).get("signals", {})
+    
+
+    def validate_signal_spec_structure(self):
+        """
+        Validates the structure of the VSS signal specification data.
+        """
+
+        # Check if the 'signals' key is present in the self.vss_signals_spec dictionary
+        if 'signals' not in self.vss_signals_spec:
+            return False
+
+        signals = self.vss_signals_spec['signals']
+
+        # Iterate over each signal in the 'signals' dictionary
+        for _, signal_data in signals.items():
+            # Check if the required keys are present in the signal data
+            if not all(key in signal_data for key in ['default_value', 'default_change_factor', 'actions', 'values', 'default_fallback', 'value_set_intents']):
+                return False
+
+            actions = signal_data['actions']
+
+            # Check if 'actions' is a dictionary with at least one action
+            if not isinstance(actions, dict) or not actions:
+                return False
+
+            # Check if the actions match the allowed actions ["set", "increase", "decrease"]
+            for action in actions.keys():
+                if action not in ["set", "increase", "decrease"]:
+                    return False
+
+            # Check if the 'synonyms' list is present for each action and is either a list or None
+            for action_data in actions.values():
+                synonyms = action_data.get('synonyms')
+                if synonyms is not None and (not isinstance(synonyms, list) or not all(isinstance(synonym, str) for synonym in synonyms)):
+                    return False
+
+            values = signal_data['values']
+
+            # Check if 'values' is a dictionary with the required keys
+            if not isinstance(values, dict) or not all(key in values for key in ['ranged', 'start', 'end', 'ignore', 'additional']):
+                return False
+
+            # Check if 'ranged' is a boolean
+            if not isinstance(values['ranged'], bool):
+                return False
+
+            default_fallback = signal_data['default_fallback']
+
+            # Check if 'default_fallback' is a boolean
+            if not isinstance(default_fallback, bool):
+                return False
+
+        # If all checks pass, the self.vss_signals_spec structure is valid
+        return True
 
 
     def map_intent_to_signal(self, intent_name):
@@ -65,27 +119,31 @@ class Intent2VSSMapper:
             action = self.determine_action(signal_data, intent_slots)
             modifier = self.determine_modifier(signal_data, intent_slots)
             value = self.determine_value(signal_data, intent_slots)
+
+            if value != None and not self.verify_value(signal_data, value):
+                value = None
+
             change_factor = signal_data["default_change_factor"]
 
             if action in ["increase", "decrease"]:
                 if value and modifier == "to":
-                    execution_list.append({"action": action, "signal": signal_name, "value": value})
+                    execution_list.append({"action": action, "signal": signal_name, "value": str(value)})
                 
                 elif value and modifier == "by":
-                    execution_list.append({"action": action, "signal": signal_name, "factor": value})
+                    execution_list.append({"action": action, "signal": signal_name, "factor": str(value)})
                 
                 elif value:
-                    execution_list.append({"action": action, "signal": signal_name, "value": value})
+                    execution_list.append({"action": action, "signal": signal_name, "value": str(value)})
 
                 elif signal_data["default_fallback"]:
-                    execution_list.append({"action": action, "signal": signal_name, "factor": change_factor})
+                    execution_list.append({"action": action, "signal": signal_name, "factor": str(change_factor)})
 
             # if no value found set the default value
             if value == None and signal_data["default_fallback"]:
                 value = signal_data["default_value"]
 
             if action == "set" and value != None:
-                execution_list.append({"action": action, "signal": signal_name, "value": value})
+                execution_list.append({"action": action, "signal": signal_name, "value": str(value)})
                     
         
         return execution_list
@@ -159,3 +217,24 @@ class Intent2VSSMapper:
         
         # the value should always returned as str because Kuksa expects str values
         return str(result) if result != None else None
+    
+
+    def verify_value(self, signal_data, value):
+        """
+        Verifies that the value is valid based on the VSS signal data.
+
+        Args:
+            signal_data (dict): The specification data for a VSS signal.
+            value (str): The value to be verified.
+
+        Returns:
+            bool: True if the value is valid, False otherwise.
+        """
+        if value in signal_data["values"]["ignore"]:
+            return False
+        
+        elif signal_data["values"]["ranged"] and isinstance(value, (int, float)):
+            return value >= signal_data["values"]["start"] and value <= signal_data["values"]["end"]
+        
+        else:
+            return value in signal_data["values"]["additional"]

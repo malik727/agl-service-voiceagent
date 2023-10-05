@@ -15,7 +15,7 @@
 # limitations under the License.
 
 import gi
-import vosk
+import hashlib
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst, GLib
 
@@ -32,11 +32,11 @@ class WakeWordDetector:
         self.sample_rate = sample_rate
         self.channels = channels
         self.bits_per_sample = bits_per_sample
-        self.frame_size = int(self.sample_rate * 0.02)
-        self.stt_model = stt_model # Speech to text model recognizer
+        self.wake_word_model = stt_model # Speech to text model recognizer
         self.recognizer_uuid = stt_model.setup_recognizer() 
-        self.buffer_duration = 1  # Buffer audio for atleast 1 second
         self.audio_buffer = bytearray()
+        self.segment_size = int(self.sample_rate * 1.0)  # Adjust the segment size (e.g., 1 second)
+     
     
     def get_wake_word_status(self):
         return self.wake_word_detected
@@ -77,31 +77,37 @@ class WakeWordDetector:
         self.bus.add_signal_watch()
         self.bus.connect("message", self.on_bus_message)
 
+    
     def on_new_buffer(self, appsink, data) -> Gst.FlowReturn:
         sample = appsink.emit("pull-sample")
         buffer = sample.get_buffer()
         data = buffer.extract_dup(0, buffer.get_size())
+
+        # Add the new data to the buffer
         self.audio_buffer.extend(data)
 
-        if len(self.audio_buffer) >= self.sample_rate * self.buffer_duration * self.channels * self.bits_per_sample // 8:
-            self.process_audio_buffer()
+        # Process audio in segments
+        while len(self.audio_buffer) >= self.segment_size:
+            segment = self.audio_buffer[:self.segment_size]
+            self.process_audio_segment(segment)
+
+            # Advance the buffer by the segment size
+            self.audio_buffer = self.audio_buffer[self.segment_size:]
 
         return Gst.FlowReturn.OK
-    
 
-    def process_audio_buffer(self):
-        # Process the accumulated audio data using the audio model
-        audio_data = bytes(self.audio_buffer)
-        if self.stt_model.init_recognition(self.recognizer_uuid, audio_data):
-            stt_result = self.stt_model.recognize(self.recognizer_uuid)
+    def process_audio_segment(self, segment):
+        # Process the audio data segment
+        audio_data = bytes(segment)
+
+        # Perform wake word detection on the audio_data
+        if self.wake_word_model.init_recognition(self.recognizer_uuid, audio_data):
+            stt_result = self.wake_word_model.recognize(self.recognizer_uuid)
             print("STT Result: ", stt_result)
             if self.wake_word in stt_result["text"]:
                 self.wake_word_detected = True
                 print("Wake word detected!")
                 self.pipeline.send_event(Gst.Event.new_eos())
-
-        self.audio_buffer.clear()  # Clear the buffer
-    
 
     def send_eos(self):
         self.pipeline.send_event(Gst.Event.new_eos())
@@ -147,4 +153,4 @@ class WakeWordDetector:
             print("Pipeline cleanup complete!")
             self.bus = None
             self.pipeline = None
-            self.stt_model.cleanup_recognizer(self.recognizer_uuid)
+            self.wake_word_model.cleanup_recognizer(self.recognizer_uuid)

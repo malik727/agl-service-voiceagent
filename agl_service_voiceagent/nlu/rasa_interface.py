@@ -44,7 +44,7 @@ class RASAInterface:
         self.thread_pool.submit(self._start_server)
 
         # Wait for a brief moment to allow the server to start
-        time.sleep(25)
+        # time.sleep(25)
 
 
     def stop_server(self):

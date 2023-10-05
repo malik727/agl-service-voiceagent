@@ -10,7 +10,7 @@
                 },
                 "increase": {
                     "intents":["volume_control_action"],
-                    "synonyms": ["increase", "up", "raise", "crank up", "louder"],
+                    "synonyms": ["increase", "up", "raise", "louder"],
                     "modifier_intents": ["to_or_by"]
                 }, 
                 "decrease": {
