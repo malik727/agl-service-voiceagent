@@ -20,11 +20,6 @@ from agl_service_voiceagent.generated import voice_agent_pb2
 from agl_service_voiceagent.generated import voice_agent_pb2_grpc
 from agl_service_voiceagent.utils.config import get_config_value
 
-# following code is only reqired for logging
-import logging
-logging.basicConfig()
-logging.getLogger("grpc").setLevel(logging.DEBUG)
-
 SERVER_URL = get_config_value('SERVER_ADDRESS') + ":" + str(get_config_value('SERVER_PORT'))
 
 def run_client(mode, nlu_model):
@@ -73,6 +68,12 @@ def run_client(mode, nlu_model):
             print("Command:", record_result.command)
             print("Status:", status)
             print("Intent:", record_result.intent)
+            intent_slots = []
             for slot in record_result.intent_slots:
                 print("Slot Name:", slot.name)
                 print("Slot Value:", slot.value)
+                i_slot = voice_agent_pb2.IntentSlot(name=slot.name, value=slot.value)
+                intent_slots.append(i_slot)
+            
+            exec_voice_command_request = voice_agent_pb2.ExecuteInput(intent=record_result.intent, intent_slots=intent_slots)
+            response = stub.ExecuteVoiceCommand(exec_voice_command_request)

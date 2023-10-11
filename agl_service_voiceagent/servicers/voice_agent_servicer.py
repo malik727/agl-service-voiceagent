@@ -22,6 +22,8 @@ from agl_service_voiceagent.generated import voice_agent_pb2_grpc
 from agl_service_voiceagent.utils.audio_recorder import AudioRecorder
 from agl_service_voiceagent.utils.wake_word import WakeWordDetector
 from agl_service_voiceagent.utils.stt_model import STTModel
+from agl_service_voiceagent.utils.kuksa_interface import KuksaInterface
+from agl_service_voiceagent.utils.mapper import Intent2VSSMapper
 from agl_service_voiceagent.utils.config import get_config_value
 from agl_service_voiceagent.utils.common import generate_unique_uuid, delete_file
 from agl_service_voiceagent.nlu.snips_interface import SnipsInterface
@@ -38,6 +40,7 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         self.sample_rate = int(get_config_value('SAMPLE_RATE'))
         self.bits_per_sample = int(get_config_value('BITS_PER_SAMPLE'))
         self.stt_model_path = get_config_value('STT_MODEL_PATH')
+        self.wake_word_model_path = get_config_value('WAKE_WORD_MODEL_PATH')
         self.snips_model_path = get_config_value('SNIPS_MODEL_PATH')
         self.rasa_model_path = get_config_value('RASA_MODEL_PATH')
         self.rasa_server_port = int(get_config_value('RASA_SERVER_PORT'))
@@ -46,10 +49,15 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
 
         # Initialize class methods
         self.stt_model = STTModel(self.stt_model_path, self.sample_rate)
+        self.stt_wake_word_model = STTModel(self.wake_word_model_path, self.sample_rate)
         self.snips_interface = SnipsInterface(self.snips_model_path)
         self.rasa_interface = RASAInterface(self.rasa_server_port, self.rasa_model_path, self.base_log_dir)
         self.rasa_interface.start_server()
         self.rvc_stream_uuids = {}
+        self.kuksa_client = KuksaInterface()
+        self.kuksa_client.connect_kuksa_client()
+        self.kuksa_client.authorize_kuksa_client()
+        self.mapper = Intent2VSSMapper()
 
 
     def CheckServiceStatus(self, request, context):
@@ -67,7 +75,7 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         detection_thread.start()
         while True:
             status = wake_word_detector.get_wake_word_status()
-            time.sleep(1)
+            time.sleep(0.5)
             if not context.is_active():
                 wake_word_detector.send_eos()
                 break
@@ -153,4 +161,69 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
             stream_id=stream_uuid,
             status=status
         )
+        return response
+
+
+    def ExecuteVoiceCommand(self, request, context):
+        intent = request.intent
+        intent_slots = request.intent_slots
+        processed_slots = []
+        for slot in intent_slots:
+            slot_name = slot.name
+            slot_value = slot.value
+            processed_slots.append({"name": slot_name, "value": slot_value})
+
+        print(intent)
+        print(processed_slots)
+        execution_list = self.mapper.parse_intent(intent, processed_slots)
+        exec_response = f"Sorry, I failed to execute command against intent '{intent}'. Maybe try again with more specific instructions."
+        exec_status = voice_agent_pb2.EXEC_ERROR
+
+        for execution_item in execution_list:
+            print(execution_item)
+            action = execution_item["action"]
+            signal = execution_item["signal"]
+
+            if self.kuksa_client.get_kuksa_status():
+                if action == "set" and "value" in execution_item:
+                    value = execution_item["value"]
+                    if self.kuksa_client.send_values(signal, value):
+                        exec_response = f"Yay, I successfully updated the intent '{intent}' to value '{value}'."
+                        exec_status = voice_agent_pb2.EXEC_SUCCESS
+                
+                elif action in ["increase", "decrease"]:
+                    if "value" in execution_item:
+                        value = execution_item["value"]
+                        if self.kuksa_client.send_values(signal, value):
+                            exec_response = f"Yay, I successfully updated the intent '{intent}' to value '{value}'."
+                            exec_status = voice_agent_pb2.EXEC_SUCCESS
+                    
+                    elif "factor" in execution_item:
+                        factor = execution_item["factor"]
+                        current_value = self.kuksa_client.get_value(signal)
+                        if current_value:
+                            current_value = int(current_value)
+                            if action == "increase":
+                                value = current_value + factor
+                                value = str(value)
+                            elif action == "decrease":
+                                value = current_value - factor
+                                value = str(value)
+                            if self.kuksa_client.send_values(signal, value):
+                                exec_response = f"Yay, I successfully updated the intent '{intent}' to value '{value}'."
+                                exec_status = voice_agent_pb2.EXEC_SUCCESS
+                        
+                        else:
+                            exec_response = f"Uh oh, there is no value set for intent '{intent}'. Why not try setting a value first?"
+                            exec_status = voice_agent_pb2.EXEC_KUKSA_CONN_ERROR
+
+            else:
+                exec_response = "Uh oh, I failed to connect to Kuksa."
+                exec_status = voice_agent_pb2.EXEC_KUKSA_CONN_ERROR
+
+        response = voice_agent_pb2.ExecuteResult(
+            response=exec_response,
+            status=exec_status
+        )
+
         return response

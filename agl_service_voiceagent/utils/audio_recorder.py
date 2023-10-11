@@ -89,8 +89,8 @@ class AudioRecorder:
 
     def stop_recording(self):
         print("Stopping recording...")
-        self.frames_above_threshold = 0
-        self.cleanup_pipeline()
+        # self.cleanup_pipeline()
+        self.pipeline.send_event(Gst.Event.new_eos())
         print("Recording finished!")
 
     
@@ -102,13 +102,13 @@ class AudioRecorder:
     def on_bus_message(self, bus, message):
         if message.type == Gst.MessageType.EOS:
             print("End-of-stream message received")
-            self.stop_recording()
+            self.cleanup_pipeline()
 
         elif message.type == Gst.MessageType.ERROR:
             err, debug_info = message.parse_error()
             print(f"Error received from element {message.src.get_name()}: {err.message}")
             print(f"Debugging information: {debug_info}")
-            self.stop_recording()
+            self.cleanup_pipeline()
 
         elif message.type == Gst.MessageType.WARNING:
             err, debug_info = message.parse_warning()
