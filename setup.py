@@ -29,7 +29,7 @@ setup(
     include_package_data=True,
     entry_points={
         "console_scripts": [
-            "voiceagent-service=service:main"
+            "voiceagent-service=agl_service_voiceagent.service:main"
         ],
     }
 )
