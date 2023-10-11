@@ -18,7 +18,7 @@ import time
 import json
 import threading
 from kuksa_client import KuksaClientThread
-from utils.config import get_config_value
+from agl_service_voiceagent.utils.config import get_config_value
 
 class KuksaInterface:
     """

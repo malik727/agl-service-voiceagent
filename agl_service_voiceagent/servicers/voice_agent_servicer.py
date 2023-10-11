@@ -17,17 +17,17 @@
 import grpc
 import time
 import threading
-from generated import voice_agent_pb2
-from generated import voice_agent_pb2_grpc
-from utils.audio_recorder import AudioRecorder
-from utils.wake_word import WakeWordDetector
-from utils.stt_model import STTModel
-from utils.kuksa_interface import KuksaInterface
-from utils.mapper import Intent2VSSMapper
-from utils.config import get_config_value
-from utils.common import generate_unique_uuid, delete_file
-from nlu.snips_interface import SnipsInterface
-from nlu.rasa_interface import RASAInterface
+from agl_service_voiceagent.generated import voice_agent_pb2
+from agl_service_voiceagent.generated import voice_agent_pb2_grpc
+from agl_service_voiceagent.utils.audio_recorder import AudioRecorder
+from agl_service_voiceagent.utils.wake_word import WakeWordDetector
+from agl_service_voiceagent.utils.stt_model import STTModel
+from agl_service_voiceagent.utils.kuksa_interface import KuksaInterface
+from agl_service_voiceagent.utils.mapper import Intent2VSSMapper
+from agl_service_voiceagent.utils.config import get_config_value
+from agl_service_voiceagent.utils.common import generate_unique_uuid, delete_file
+from agl_service_voiceagent.nlu.snips_interface import SnipsInterface
+from agl_service_voiceagent.nlu.rasa_interface import RASAInterface
 
 
 class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
@@ -212,6 +212,10 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
                             if self.kuksa_client.send_values(signal, value):
                                 exec_response = f"Yay, I successfully updated the intent '{intent}' to value '{value}'."
                                 exec_status = voice_agent_pb2.EXEC_SUCCESS
+                        
+                        else:
+                            exec_response = f"Uh oh, there is no value set for intent '{intent}'. Why not try setting a value first?"
+                            exec_status = voice_agent_pb2.EXEC_KUKSA_CONN_ERROR
 
             else:
                 exec_response = "Uh oh, I failed to connect to Kuksa."

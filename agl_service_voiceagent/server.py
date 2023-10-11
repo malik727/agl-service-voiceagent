@@ -16,9 +16,9 @@
 
 import grpc
 from concurrent import futures
-from generated import voice_agent_pb2_grpc
-from servicers.voice_agent_servicer import VoiceAgentServicer
-from utils.config import get_config_value
+from agl_service_voiceagent.generated import voice_agent_pb2_grpc
+from agl_service_voiceagent.servicers.voice_agent_servicer import VoiceAgentServicer
+from agl_service_voiceagent.utils.config import get_config_value
 
 SERVER_URL = get_config_value('SERVER_ADDRESS') + ":" + str(get_config_value('SERVER_PORT'))
 

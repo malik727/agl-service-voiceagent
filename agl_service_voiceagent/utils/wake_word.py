@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import gi
-import hashlib
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst, GLib
 
