@@ -20,12 +20,18 @@ import json
 
 
 def add_trailing_slash(path):
+    """
+    Adds a trailing slash to a path if it does not already have one.
+    """
     if path and not path.endswith('/'):
         path += '/'
     return path
 
 
 def generate_unique_uuid(length):
+    """
+    Generates a unique ID of specified length.
+    """
     unique_id = str(uuid.uuid4().int)
     # Ensure the generated ID is exactly 'length' digits by taking the last 'length' characters
     unique_id = unique_id[-length:]
@@ -33,14 +39,20 @@ def generate_unique_uuid(length):
 
 
 def load_json_file(file_path):
-        try:
-            with open(file_path, 'r') as file:
-                return json.load(file)
-        except FileNotFoundError:
-            raise ValueError(f"File '{file_path}' not found.")
+    """
+    Loads a JSON file and returns the data.
+    """
+    try:
+        with open(file_path, 'r') as file:
+            return json.load(file)
+    except FileNotFoundError:
+        raise ValueError(f"File '{file_path}' not found.")
 
 
 def delete_file(file_path):
+    """
+    Deletes a file if it exists.
+    """
     if os.path.exists(file_path):
         try:
             os.remove(file_path)
@@ -51,6 +63,9 @@ def delete_file(file_path):
 
 
 def words_to_number(words):
+    """
+    Converts a string of words to a number.
+    """
     word_to_number = {
         'one': 1,
         'two': 2,

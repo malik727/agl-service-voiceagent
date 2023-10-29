@@ -22,7 +22,21 @@ Gst.init(None)
 GLib.threads_init()
 
 class WakeWordDetector:
+    """
+    WakeWordDetector is a class for detecting a wake word in an audio stream using GStreamer and Vosk.
+    """
+
     def __init__(self, wake_word, stt_model, channels=1, sample_rate=16000, bits_per_sample=16):
+        """
+        Initialize the WakeWordDetector instance with the provided parameters.
+
+        Args:
+            wake_word (str): The wake word to detect in the audio stream.
+            stt_model (STTModel): An instance of the STTModel for speech-to-text recognition.
+            channels (int, optional): The number of audio channels (default is 1).
+            sample_rate (int, optional): The audio sample rate in Hz (default is 16000).
+            bits_per_sample (int, optional): The number of bits per sample (default is 16).
+        """
         self.loop = GLib.MainLoop()
         self.pipeline = None
         self.bus = None
@@ -38,9 +52,18 @@ class WakeWordDetector:
      
     
     def get_wake_word_status(self):
+        """
+        Get the status of wake word detection.
+
+        Returns:
+            bool: True if the wake word has been detected, False otherwise.
+        """
         return self.wake_word_detected
 
     def create_pipeline(self):
+        """
+        Create and configure the GStreamer audio processing pipeline for wake word detection.
+        """
         print("Creating pipeline for Wake Word Detection...")
         self.pipeline = Gst.Pipeline()
         autoaudiosrc = Gst.ElementFactory.make("autoaudiosrc", None)
@@ -78,6 +101,16 @@ class WakeWordDetector:
 
     
     def on_new_buffer(self, appsink, data) -> Gst.FlowReturn:
+        """
+        Callback function to handle new audio buffers from GStreamer appsink.
+
+        Args:
+            appsink (Gst.AppSink): The GStreamer appsink.
+            data (object): User data (not used).
+
+        Returns:
+            Gst.FlowReturn: Indicates the status of buffer processing.
+        """
         sample = appsink.emit("pull-sample")
         buffer = sample.get_buffer()
         data = buffer.extract_dup(0, buffer.get_size())
@@ -96,6 +129,12 @@ class WakeWordDetector:
         return Gst.FlowReturn.OK
 
     def process_audio_segment(self, segment):
+        """
+        Process an audio segment for wake word detection.
+
+        Args:
+            segment (bytes): The audio segment to process.
+        """
         # Process the audio data segment
         audio_data = bytes(segment)
 
@@ -109,22 +148,38 @@ class WakeWordDetector:
                 self.pipeline.send_event(Gst.Event.new_eos())
 
     def send_eos(self):
+        """
+        Send an End-of-Stream (EOS) event to the pipeline.
+        """
         self.pipeline.send_event(Gst.Event.new_eos())
         self.audio_buffer.clear()
 
 
     def start_listening(self):
+        """
+        Start listening for the wake word and enter the event loop.
+        """
         self.pipeline.set_state(Gst.State.PLAYING)
         print("Listening for Wake Word...")
         self.loop.run()
 
 
     def stop_listening(self):
+        """
+        Stop listening for the wake word and clean up the pipeline.
+        """
         self.cleanup_pipeline()
         self.loop.quit()
 
 
     def on_bus_message(self, bus, message):
+        """
+        Handle GStreamer bus messages and perform actions based on the message type.
+
+        Args:
+            bus (Gst.Bus): The GStreamer bus.
+            message (Gst.Message): The GStreamer message to process.
+        """
         if message.type == Gst.MessageType.EOS:
             print("End-of-stream message received")
             self.stop_listening()
@@ -145,6 +200,9 @@ class WakeWordDetector:
     
 
     def cleanup_pipeline(self):
+        """
+        Clean up the GStreamer pipeline and release associated resources.
+        """
         if self.pipeline is not None:
             print("Cleaning up pipeline...")
             self.pipeline.set_state(Gst.State.NULL)

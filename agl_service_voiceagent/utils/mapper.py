@@ -35,56 +35,59 @@ class Intent2VSSMapper:
         self.vss_signals_spec = load_json_file(vss_signals_spec_file).get("signals", {})
 
         if not self.validate_signal_spec_structure():
-            raise ValueError("Invalid VSS signal specification structure.")
+            raise ValueError("[-] Invalid VSS signal specification structure.")
 
     def validate_signal_spec_structure(self):
         """
         Validates the structure of the VSS signal specification data.
         """
 
-        # Check if the 'signals' key is present in the self.vss_signals_spec dictionary
-        if 'signals' not in self.vss_signals_spec:
-            return False
-
-        signals = self.vss_signals_spec['signals']
+        signals = self.vss_signals_spec
 
         # Iterate over each signal in the 'signals' dictionary
-        for _, signal_data in signals.items():
+        for signal_name, signal_data in signals.items():
             # Check if the required keys are present in the signal data
             if not all(key in signal_data for key in ['default_value', 'default_change_factor', 'actions', 'values', 'default_fallback', 'value_set_intents']):
+                print(f"[-] {signal_name}: Missing required keys in signal data.")
                 return False
 
             actions = signal_data['actions']
 
             # Check if 'actions' is a dictionary with at least one action
             if not isinstance(actions, dict) or not actions:
+                print(f"[-] {signal_name}: Invalid 'actions' key in signal data. Must be an object with at least one action.")
                 return False
 
             # Check if the actions match the allowed actions ["set", "increase", "decrease"]
             for action in actions.keys():
                 if action not in ["set", "increase", "decrease"]:
+                    print(f"[-] {signal_name}: Invalid action in signal data. Allowed actions: ['set', 'increase', 'decrease']")
                     return False
 
             # Check if the 'synonyms' list is present for each action and is either a list or None
             for action_data in actions.values():
                 synonyms = action_data.get('synonyms')
                 if synonyms is not None and (not isinstance(synonyms, list) or not all(isinstance(synonym, str) for synonym in synonyms)):
+                    print(f"[-] {signal_name}: Invalid 'synonyms' value in signal data. Must be a list of strings.")
                     return False
 
             values = signal_data['values']
 
             # Check if 'values' is a dictionary with the required keys
             if not isinstance(values, dict) or not all(key in values for key in ['ranged', 'start', 'end', 'ignore', 'additional']):
+                print(f"[-] {signal_name}: Invalid 'values' key in signal data. Required keys: ['ranged', 'start', 'end', 'ignore', 'additional']")
                 return False
 
             # Check if 'ranged' is a boolean
             if not isinstance(values['ranged'], bool):
+                print(f"[-] {signal_name}: Invalid 'ranged' value in signal data. Allowed values: [true, false]")
                 return False
 
             default_fallback = signal_data['default_fallback']
 
             # Check if 'default_fallback' is a boolean
             if not isinstance(default_fallback, bool):
+                print(f"[-] {signal_name}: Invalid 'default_fallback' value in signal data. Allowed values: [true, false]")
                 return False
 
         # If all checks pass, the self.vss_signals_spec structure is valid

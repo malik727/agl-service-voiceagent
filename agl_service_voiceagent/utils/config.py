@@ -14,21 +14,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import configparser
 
-# Get the absolute path to the directory of the current script
-current_dir = os.path.dirname(os.path.abspath(__file__))
-# Construct the path to the config.ini file located in the base directory
-config_path = os.path.join(current_dir, '..', 'config.ini')
-
 config = configparser.ConfigParser()
-config.read(config_path)
+config_path = None
+
+def set_config_path(path):
+    """
+    Sets the path to the config file.
+    """
+    global config_path
+    config_path = path
+    config.read(config_path)
+
+def load_config():
+    """
+    Loads the config file.
+    """
+    if config_path is not None:
+        config.read(config_path)
+    else:
+        raise Exception("Config file path not provided.")
 
 def update_config_value(value, key, group="General"):
+    """
+    Updates a value in the config file.
+    """
+    if config_path is None:
+        raise Exception("Config file path not set.")
+    
     config.set(group, key, value)
     with open(config_path, 'w') as configfile:
         config.write(configfile)
 
 def get_config_value(key, group="General"):
+    """
+    Gets a value from the config file.
+    """
     return config.get(group, key)

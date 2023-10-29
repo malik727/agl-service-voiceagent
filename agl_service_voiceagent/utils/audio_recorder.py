@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import gi
-import vosk
 import time
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst, GLib
@@ -24,7 +23,21 @@ Gst.init(None)
 GLib.threads_init()
 
 class AudioRecorder:
+    """
+    AudioRecorder is a class for recording audio using GStreamer in various modes.
+    """
+
     def __init__(self, stt_model, audio_files_basedir, channels=1, sample_rate=16000, bits_per_sample=16):
+        """
+        Initialize the AudioRecorder instance with the provided parameters.
+
+        Args:
+            stt_model (str): The speech-to-text model to use for voice input recognition.
+            audio_files_basedir (str): The base directory for saving audio files.
+            channels (int, optional): The number of audio channels (default is 1).
+            sample_rate (int, optional): The audio sample rate in Hz (default is 16000).
+            bits_per_sample (int, optional): The number of bits per sample (default is 16).
+        """
         self.loop = GLib.MainLoop()
         self.mode = None
         self.pipeline = None
@@ -43,6 +56,12 @@ class AudioRecorder:
     
 
     def create_pipeline(self):
+        """
+        Create and configure the GStreamer audio recording pipeline.
+
+        Returns:
+            str: The name of the audio file being recorded.
+        """
         print("Creating pipeline for audio recording in {} mode...".format(self.mode))
         self.pipeline = Gst.Pipeline()
         autoaudiosrc = Gst.ElementFactory.make("autoaudiosrc", None)
@@ -83,11 +102,17 @@ class AudioRecorder:
 
 
     def start_recording(self):
+        """
+        Start recording audio using the GStreamer pipeline.
+        """
         self.pipeline.set_state(Gst.State.PLAYING)
         print("Recording Voice Input...")
 
 
     def stop_recording(self):
+        """
+        Stop audio recording and clean up the GStreamer pipeline.
+        """
         print("Stopping recording...")
         # self.cleanup_pipeline()
         self.pipeline.send_event(Gst.Event.new_eos())
@@ -95,11 +120,23 @@ class AudioRecorder:
 
     
     def set_pipeline_mode(self, mode):
+        """
+        Set the recording mode to 'auto' or 'manual'.
+
+        Args:
+            mode (str): The recording mode ('auto' or 'manual').
+        """
         self.mode = mode
 
     
-    # this method helps with error handling
     def on_bus_message(self, bus, message):
+        """
+        Handle GStreamer bus messages and perform actions based on the message type.
+
+        Args:
+            bus (Gst.Bus): The GStreamer bus.
+            message (Gst.Message): The GStreamer message to process.
+        """
         if message.type == Gst.MessageType.EOS:
             print("End-of-stream message received")
             self.cleanup_pipeline()
@@ -136,6 +173,9 @@ class AudioRecorder:
     
 
     def cleanup_pipeline(self):
+        """
+        Clean up the GStreamer pipeline, set it to NULL state, and remove the signal watch.
+        """
         if self.pipeline is not None:
             print("Cleaning up pipeline...")
             self.pipeline.set_state(Gst.State.NULL)

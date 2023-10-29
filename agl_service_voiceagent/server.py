@@ -20,9 +20,8 @@ from agl_service_voiceagent.generated import voice_agent_pb2_grpc
 from agl_service_voiceagent.servicers.voice_agent_servicer import VoiceAgentServicer
 from agl_service_voiceagent.utils.config import get_config_value
 
-SERVER_URL = get_config_value('SERVER_ADDRESS') + ":" + str(get_config_value('SERVER_PORT'))
-
 def run_server():
+    SERVER_URL = get_config_value('SERVER_ADDRESS') + ":" + str(get_config_value('SERVER_PORT'))
     print("Starting Voice Agent Service...")
     print(f"Server running at URL: {SERVER_URL}")
     print(f"STT Model Path: {get_config_value('STT_MODEL_PATH')}")

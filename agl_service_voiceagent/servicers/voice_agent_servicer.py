@@ -31,9 +31,16 @@ from agl_service_voiceagent.nlu.rasa_interface import RASAInterface
 
 
 class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
+    """
+    Voice Agent Servicer class that implements the gRPC service defined in voice_agent.proto.
+    """
+
     def __init__(self):
+        """
+        Constructor for VoiceAgentServicer class.
+        """
         # Get the config values
-        self.service_version = get_config_value('SERVICE_VERSION')
+        self.service_version = "v0.3.0"
         self.wake_word = get_config_value('WAKE_WORD')
         self.base_audio_dir = get_config_value('BASE_AUDIO_DIR')
         self.channels = int(get_config_value('CHANNELS'))
@@ -44,6 +51,7 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         self.snips_model_path = get_config_value('SNIPS_MODEL_PATH')
         self.rasa_model_path = get_config_value('RASA_MODEL_PATH')
         self.rasa_server_port = int(get_config_value('RASA_SERVER_PORT'))
+        self.rasa_detached_mode = bool(int(get_config_value('RASA_DETACHED_MODE')))
         self.base_log_dir = get_config_value('BASE_LOG_DIR')
         self.store_voice_command = bool(int(get_config_value('STORE_VOICE_COMMANDS')))
 
@@ -52,7 +60,11 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         self.stt_wake_word_model = STTModel(self.wake_word_model_path, self.sample_rate)
         self.snips_interface = SnipsInterface(self.snips_model_path)
         self.rasa_interface = RASAInterface(self.rasa_server_port, self.rasa_model_path, self.base_log_dir)
-        self.rasa_interface.start_server()
+
+        # Only start RASA server if its not in detached mode, else we assume server is already running
+        if not self.rasa_detached_mode:
+            self.rasa_interface.start_server()
+
         self.rvc_stream_uuids = {}
         self.kuksa_client = KuksaInterface()
         self.kuksa_client.connect_kuksa_client()
@@ -61,6 +73,9 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
 
 
     def CheckServiceStatus(self, request, context):
+        """
+        Check the status of the Voice Agent service including the version.
+        """
         response = voice_agent_pb2.ServiceStatus(
             version=self.service_version,
             status=True
@@ -69,6 +84,9 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
 
 
     def DetectWakeWord(self, request, context):
+        """
+        Detect the wake word using the wake word detection model.
+        """
         wake_word_detector = WakeWordDetector(self.wake_word, self.stt_model, self.channels, self.sample_rate, self.bits_per_sample)
         wake_word_detector.create_pipeline()
         detection_thread = threading.Thread(target=wake_word_detector.start_listening)
@@ -87,6 +105,9 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
     
     
     def RecognizeVoiceCommand(self, requests, context):
+        """
+        Recognize the voice command using the STT model and extract the intent using the NLU model.
+        """
         stt = ""
         intent = ""
         intent_slots = []
@@ -165,6 +186,9 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
 
 
     def ExecuteVoiceCommand(self, request, context):
+        """
+        Execute the voice command by sending the intent to Kuksa.
+        """
         intent = request.intent
         intent_slots = request.intent_slots
         processed_slots = []

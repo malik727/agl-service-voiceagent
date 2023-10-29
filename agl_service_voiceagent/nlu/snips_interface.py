@@ -19,10 +19,30 @@ from typing import Text
 from snips_inference_agl import SnipsNLUEngine
 
 class SnipsInterface:
+    """
+    SnipsInterface is a class for interacting with the Snips Natural Language Understanding Engine (Snips NLU).
+    """
+
     def __init__(self, model_path: Text):
+        """
+        Initialize the SnipsInterface instance with the provided Snips NLU model.
+
+        Args:
+            model_path (Text): The path to the Snips NLU model.
+        """
         self.engine = SnipsNLUEngine.from_path(model_path)
 
     def preprocess_text(self, text):
+        """
+        Preprocess the input text by converting it to lowercase, removing leading/trailing spaces,
+        and removing special characters and punctuation.
+
+        Args:
+            text (str): The input text to preprocess.
+
+        Returns:
+            str: The preprocessed text.
+        """
         # text to lower case and remove trailing and leading spaces
         preprocessed_text = text.lower().strip()
         # remove special characters, punctuation, and extra whitespaces
@@ -30,11 +50,29 @@ class SnipsInterface:
         return preprocessed_text
 
     def extract_intent(self, text: Text):
+        """
+        Extract the intent from preprocessed text using the Snips NLU engine.
+
+        Args:
+            text (Text): The preprocessed input text.
+
+        Returns:
+            dict: The intent extraction result as a dictionary.
+        """
         preprocessed_text = self.preprocess_text(text)
         result = self.engine.parse(preprocessed_text)
         return result
     
     def process_intent(self, intent_output):
+        """
+        Extract intent and slot values from Snips NLU output.
+
+        Args:
+            intent_output (dict): The intent extraction result from Snips NLU.
+
+        Returns:
+            tuple: A tuple containing the intent name (str) and a dictionary of intent actions (entity-value pairs).
+        """
         intent_actions = {}
         intent = intent_output['intent']['intentName']
         slots = intent_output.get('slots', [])

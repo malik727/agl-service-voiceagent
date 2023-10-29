@@ -12,8 +12,8 @@ setup(
     author_email="talhamalik727x@gmail.com",
     install_requires=[
         "kuksa-client==0.4.0",
-        "grpcio==1.45.0",
-        "grpcio-tools==1.45.0",
+        "grpcio>=1.45.0",
+        "grpcio-tools>=1.45.0",
         "vosk==0.3.42",
         "PyGObject==3.42.0",
         "rasa==3.6.4",
