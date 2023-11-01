@@ -4,7 +4,6 @@ A gRPC-based voice agent service designed for Automotive Grade Linux (AGL). This
 ## Table of Contents
 - [Features](#features)
 - [Prerequisites](#prerequisites)
-- [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
 - [Maintainers](#maintainers)
@@ -19,25 +18,10 @@ A gRPC-based voice agent service designed for Automotive Grade Linux (AGL). This
 ## Prerequisites
 Before you begin, ensure you have met the following requirements:
 
-- Python 3.9 or higher installed on your system.
-- The required Python packages and dependencies installed (see [Installation](#installation) section).
+- AGL master branch (or later) installed on your target device.
+- `meta-offline-voice-agent` layer added to your AGL build.
 - Access to necessary audio and NLU model files (STT, Snips, RASA).
 - Kuksa setup if you plan to use automotive functionalities.
-
-## Installation
-To install the AGL Voice Agent Service on your local machine, follow these steps:
-
-1. Clone the project repository from GitHub:
-
-   ```bash
-   git clone https://github.com/malik727/agl-service-voiceagent.git
-   ```
-2. Navigate to the project directory.
-3. Install dependencies and the voiceagent service package:
-   ```bash
-   pip install -r requirements.txt
-   python setup.py install
-   ```
 
 ## Usage:
 #### Starting the Server
@@ -49,13 +33,19 @@ voiceagent-service run-server
 
 You can customize the server behavior by providing additional options such as STT model path, Snips model path, RASA model path, and more. Use the `--help` option to see available options.
 
-To run the server based on the `config.ini` file, simply use the following command:
+To run the server based on the default config file, simply use the following command:
 
 ```bash
-voiceagent-service run-server --config
+voiceagent-service run-server --default
 ```
 
-This command will automatically configure and start the server using the settings specified in the `config.ini` file. You don't need to provide additional command-line arguments when using this option.
+This command will automatically configure and start the server using the settings specified in the default file. You don't need to provide additional command-line arguments when using this option.
+
+Or, you can manually specify the config file path using the `--config` option:
+
+```bash
+voiceagent-service run-server --config CONFIG_FILE_PATH
+```   
 
 #### Running the Client
 To interact with the gRPC server, you can run the client in different modes:
@@ -70,7 +60,7 @@ voiceagent-service run-client --mode MODE --nlu NLU_ENGINE
 Replace MODE with the desired mode (e.g., "wake-word") and NLU_ENGINE with the preferred NLU engine (e.g., "snips").
 
 ## Configuration
-Configuration options for the AGL Voice Agent Service can be found in the `config.ini` file. You can customize various settings, including the service version, audio directories, and Kuksa integration. **Important:** while manually making changes to the config file make sure you add trailing slash to all the directory paths, ie. the paths to directories should always end with a `/`. 
+Configuration options for the AGL Voice Agent Service can be found in the default `config.ini` file. You can customize various settings, including the AI models, audio directories, and Kuksa integration. **Important:** while manually making changes to the config file make sure you add trailing slash to all the directory paths, ie. the paths to directories should always end with a `/`. 
 
 ## Maintainers
 - **Malik Talha** <talhamalik727x@gmail.com>
