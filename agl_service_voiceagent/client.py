@@ -19,9 +19,9 @@ import grpc
 from agl_service_voiceagent.generated import voice_agent_pb2
 from agl_service_voiceagent.generated import voice_agent_pb2_grpc
 
-def run_client(mode, nlu_model, server_address, server_port):
+def run_client(server_address, server_port, mode, nlu_engine, recording_time):
     SERVER_URL = server_address + ":" + server_port
-    nlu_model = voice_agent_pb2.SNIPS if nlu_model == "snips" else voice_agent_pb2.RASA
+    nlu_engine = voice_agent_pb2.RASA if nlu_engine == "rasa" else voice_agent_pb2.SNIPS
     print("Starting Voice Agent Client...")
     print(f"Client connecting to URL: {SERVER_URL}")
     with grpc.insecure_channel(SERVER_URL) as channel:
@@ -29,7 +29,7 @@ def run_client(mode, nlu_model, server_address, server_port):
         print("Voice Agent Client started!")
         if mode == 'wake-word':
             stub = voice_agent_pb2_grpc.VoiceAgentServiceStub(channel)
-            print("Listening for wake word...")
+            print("[+] Listening for wake word...")
             wake_request = voice_agent_pb2.Empty()
             wake_results = stub.DetectWakeWord(wake_request)
             wake_word_detected = False
@@ -41,18 +41,20 @@ def run_client(mode, nlu_model, server_address, server_port):
                     break
 
         elif mode == 'auto':
-            raise ValueError("Auto mode is not implemented yet.")
+            raise ValueError("[-] Auto mode is not implemented yet.")
 
         elif mode == 'manual':
             stub = voice_agent_pb2_grpc.VoiceAgentServiceStub(channel)
-            print("Recording voice command...")
-            record_start_request = voice_agent_pb2.RecognizeControl(action=voice_agent_pb2.START, nlu_model=nlu_model, record_mode=voice_agent_pb2.MANUAL)
+            print("[+] Recording voice command in manual mode...")
+            record_start_request = voice_agent_pb2.RecognizeControl(action=voice_agent_pb2.START, nlu_model=nlu_engine, record_mode=voice_agent_pb2.MANUAL)
             response = stub.RecognizeVoiceCommand(iter([record_start_request]))
             stream_id = response.stream_id
-            time.sleep(5) # any arbitrary pause here
-            record_stop_request = voice_agent_pb2.RecognizeControl(action=voice_agent_pb2.STOP, nlu_model=nlu_model, record_mode=voice_agent_pb2.MANUAL, stream_id=stream_id)
+
+            time.sleep(recording_time) # pause here for the number of seconds passed by user or default 5 seconds
+
+            record_stop_request = voice_agent_pb2.RecognizeControl(action=voice_agent_pb2.STOP, nlu_model=nlu_engine, record_mode=voice_agent_pb2.MANUAL, stream_id=stream_id)
             record_result = stub.RecognizeVoiceCommand(iter([record_stop_request]))
-            print("Voice command recorded!")
+            print("[+] Voice command recording ended!")
             
             status = "Uh oh! Status is unknown."
             if record_result.status == voice_agent_pb2.REC_SUCCESS:
@@ -63,8 +65,8 @@ def run_client(mode, nlu_model, server_address, server_port):
                 status = "Intent not recognized."
 
             # Process the response
-            print("Command:", record_result.command)
             print("Status:", status)
+            print("Command:", record_result.command)
             print("Intent:", record_result.intent)
             intent_slots = []
             for slot in record_result.intent_slots:
@@ -73,5 +75,7 @@ def run_client(mode, nlu_model, server_address, server_port):
                 i_slot = voice_agent_pb2.IntentSlot(name=slot.name, value=slot.value)
                 intent_slots.append(i_slot)
             
-            exec_voice_command_request = voice_agent_pb2.ExecuteInput(intent=record_result.intent, intent_slots=intent_slots)
-            response = stub.ExecuteVoiceCommand(exec_voice_command_request)
+            if record_result.status == voice_agent_pb2.REC_SUCCESS:
+                print("[+] Executing voice command...")
+                exec_voice_command_request = voice_agent_pb2.ExecuteInput(intent=record_result.intent, intent_slots=intent_slots)
+                response = stub.ExecuteVoiceCommand(exec_voice_command_request)

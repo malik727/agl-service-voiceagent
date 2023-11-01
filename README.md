@@ -52,12 +52,17 @@ To interact with the gRPC server, you can run the client in different modes:
 - Wake-word Mode: Detects wake words and triggers voice commands.
 - Manual Mode: Manually control voice command recognition.
 
-To run the client in a specific mode, use the following command:
-
+To run the client in a Wake-word mode, use the following command:
 ```bash
-voiceagent-service run-client --mode MODE --nlu NLU_ENGINE
+voiceagent-service run-client --server_address SERVER_IP --server_port SERVER_PORT --mode wake-word
 ```
-Replace MODE with the desired mode (e.g., "wake-word") and NLU_ENGINE with the preferred NLU engine (e.g., "snips").
+Replace `SERVER_IP` with IP address of the running Voice Agent server, and `SERVER_PORT` with the port of the running Voice Agent server.
+
+To run the client in Manual mode, use the following command:
+```bash
+voiceagent-service run-client --server_address SERVER_IP --server_port SERVER_PORT --mode manual --nlu NLU_ENGINE
+```
+Replace `NLU_ENGINE` with the preferred NLU engine ("snips" or "rasa"), `SERVER_IP` with IP address of the running Voice Agent server, and `SERVER_PORT` with the port of the running Voice Agent server. You can also pass a custom value to flag `--recording-time` if you want to change the default recording time from 5 seconds to any other value.
 
 ## Configuration
 Configuration options for the AGL Voice Agent Service can be found in the default `config.ini` file. You can customize various settings, including the AI models, audio directories, and Kuksa integration. **Important:** while manually making changes to the config file make sure you add trailing slash to all the directory paths, ie. the paths to directories should always end with a `/`. 

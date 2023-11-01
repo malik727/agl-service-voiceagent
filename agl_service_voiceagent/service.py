@@ -58,10 +58,11 @@ def main():
     server_parser.add_argument('--audio-store-dir', required=False, help='Directory to store the generated audio files.')
     server_parser.add_argument('--log-store-dir', required=False, help='Directory to store the generated log files.')
 
-    client_parser.add_argument('--mode', required=True, help='Mode to run the client in. Supported modes: "wake-word", "auto" and "manual".')
-    client_parser.add_argument('--nlu', required=True, help='NLU engine to use. Supported NLU egnines: "snips" and "rasa".')
     client_parser.add_argument('--server-address', required=True, help='Address of the gRPC server running the Voice Agent Service.')
     client_parser.add_argument('--server-port', required=True, help='Port of the gRPC server running the Voice Agent Service.')
+    client_parser.add_argument('--mode', required=True, help='Mode to run the client in. Supported modes: "wake-word", "auto" and "manual".')
+    client_parser.add_argument('--nlu', help='NLU engine to use. Supported NLU egnines: "snips" and "rasa".')
+    client_parser.add_argument('--recording-time', help='Number of seconds to continue recording the voice command. Required by the \'manual\' mode. Defaults to 10 seconds.')
 
     args = parser.parse_args()
     
@@ -153,32 +154,35 @@ def main():
 
             logger = get_logger()
             logger.info(f"Starting Voice Agent Service in server mode using the default config file...")
-
-            
-
+        
         # create the base audio dir if not exists
         if not os.path.exists(get_config_value('BASE_AUDIO_DIR')):
             os.makedirs(get_config_value('BASE_AUDIO_DIR'))
-        
-        # create the base log dir if not exists
-        if not os.path.exists(get_config_value('BASE_LOG_DIR')):
-            os.makedirs(get_config_value('BASE_LOG_DIR'))
 
         run_server()
 
     elif args.subcommand == 'run-client':
+        server_address = args.server_address
+        server_port = args.server_port
+        nlu_engine = ""
         mode = args.mode
+        recording_time = 5
+
         if mode not in ['wake-word', 'auto', 'manual']:
             raise ValueError("Invalid mode. Supported modes: 'wake-word', 'auto' and 'manual'. Use --help to see available options.")
         
-        model = args.nlu
-        if model not in ['snips', 'rasa']:
-            raise ValueError("Invalid NLU engine. Supported NLU engines: 'snips' and 'rasa'. Use --help to see available options.")
+        if mode in ["auto", "manual"]:
+            if not args.nlu:
+                raise ValueError("The --nlu is missing. Please provide a value for intent engine. Supported NLU engines: 'snips' and 'rasa'.  Use --help to see available options.")
+            
+            nlu_engine = args.nlu
+            if nlu_engine not in ['snips', 'rasa']:
+                raise ValueError("Invalid NLU engine. Supported NLU engines: 'snips' and 'rasa'. Use --help to see available options.")
+            
+            if mode == "manual" and args.recording_time:
+                recording_time = int(args.recording_time)
         
-        server_address = args.server_address
-        server_port = args.server_port
-        
-        run_client(mode, model, server_address, server_port)
+        run_client(server_address, server_port, mode, nlu_engine, recording_time)
 
     else:
         print_version()
