@@ -32,7 +32,7 @@ from agl_service_voiceagent.client import run_client
 
 def print_version():
     print("Automotive Grade Linux (AGL)")
-    print(f"Voice Agent Service v0.3.0")
+    print(f"Voice Agent Service v0.4.0")
 
 
 def main():
@@ -72,19 +72,24 @@ def main():
     elif args.subcommand == 'run-server':
         if not args.default and not args.config:
             if not args.stt_model_path:
-                raise ValueError("The --stt-model-path is missing. Please provide a value. Use --help to see available options.")
+                print("Error: The --stt-model-path is missing. Please provide a value. Use --help to see available options.")
+                exit(1)
             
             if not args.snips_model_path:
-                raise ValueError("The --snips-model-path is missing. Please provide a value. Use --help to see available options.")
+                print("Error: The --snips-model-path is missing. Please provide a value. Use --help to see available options.")
+                exit(1)
             
             if not args.rasa_model_path:
-                raise ValueError("The --rasa-model-path is missing. Please provide a value. Use --help to see available options.")
+                print("Error: The --rasa-model-path is missing. Please provide a value. Use --help to see available options.")
+                exit(1)
             
             if not args.intents_vss_map_path:
-                raise ValueError("The --intents-vss-map-path is missing. Please provide a value. Use --help to see available options.")
+                print("Error: The --intents-vss-map-path is missing. Please provide a value. Use --help to see available options.")
+                exit(1)
             
             if not args.vss_signals_spec_path:
-                raise ValueError("The --vss-signals-spec is missing. Please provide a value. Use --help to see available options.")
+                print("Error: The --vss-signals-spec-path is missing. Please provide a value. Use --help to see available options.")
+                exit(1)
             
             # Contruct the default config file path
             config_path = os.path.join(current_dir, "config.ini")
@@ -169,15 +174,18 @@ def main():
         recording_time = 5
 
         if mode not in ['wake-word', 'auto', 'manual']:
-            raise ValueError("Invalid mode. Supported modes: 'wake-word', 'auto' and 'manual'. Use --help to see available options.")
+            print("Error: Invalid value for --mode. Supported modes: 'wake-word', 'auto' and 'manual'. Use --help to see available options.")
+            exit(1)
         
         if mode in ["auto", "manual"]:
             if not args.nlu:
-                raise ValueError("The --nlu is missing. Please provide a value for intent engine. Supported NLU engines: 'snips' and 'rasa'.  Use --help to see available options.")
+                print("Error: The --nlu flag is missing. Please provide a value for intent engine. Supported NLU engines: 'snips' and 'rasa'.  Use --help to see available options.")
+                exit(1)
             
             nlu_engine = args.nlu
             if nlu_engine not in ['snips', 'rasa']:
-                raise ValueError("Invalid NLU engine. Supported NLU engines: 'snips' and 'rasa'. Use --help to see available options.")
+                print("Error: Invalid value for --nlu. Supported NLU engines: 'snips' and 'rasa'. Use --help to see available options.")
+                exit(1)
             
             if mode == "manual" and args.recording_time:
                 recording_time = int(args.recording_time)

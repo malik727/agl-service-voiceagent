@@ -5,7 +5,7 @@ packages = [p for p in find_packages()
 
 setup(
     name="agl_service_voiceagent",
-    version="0.3.0",
+    version="0.4.0",
     description="A gRPC-based voice agent service designed for Automotive Grade Linux (AGL). This service leverages GStreamer, Vosk, Snips, and RASA to seamlessly process user voice commands. It converts spoken words into text, extracts intents from these commands, and performs actions through the Kuksa interface.",
     url="https://github.com/malik727/agl-service-voiceagent",
     author="Malik Talha",

@@ -40,7 +40,7 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         Constructor for VoiceAgentServicer class.
         """
         # Get the config values
-        self.service_version = "v0.3.0"
+        self.service_version = "v0.4.0"
         self.wake_word = get_config_value('WAKE_WORD')
         self.base_audio_dir = get_config_value('BASE_AUDIO_DIR')
         self.channels = int(get_config_value('CHANNELS'))
