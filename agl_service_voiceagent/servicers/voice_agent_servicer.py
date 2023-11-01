@@ -17,6 +17,7 @@
 import grpc
 import time
 import threading
+import logging
 from agl_service_voiceagent.generated import voice_agent_pb2
 from agl_service_voiceagent.generated import voice_agent_pb2_grpc
 from agl_service_voiceagent.utils.audio_recorder import AudioRecorder
@@ -29,6 +30,7 @@ from agl_service_voiceagent.utils.common import generate_unique_uuid, delete_fil
 from agl_service_voiceagent.nlu.snips_interface import SnipsInterface
 from agl_service_voiceagent.nlu.rasa_interface import RASAInterface
 
+logging.basicConfig(level=logging.DEBUG)
 
 class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
     """
@@ -56,20 +58,34 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         self.store_voice_command = bool(int(get_config_value('STORE_VOICE_COMMANDS')))
 
         # Initialize class methods
+        logging.info("Loading Speech to Text and Wake Word Model...")
         self.stt_model = STTModel(self.stt_model_path, self.sample_rate)
         self.stt_wake_word_model = STTModel(self.wake_word_model_path, self.sample_rate)
+        logging.info("Speech to Text and Wake Word Model loaded successfully.")
+
+        logging.info("Starting SNIPS intent engine...")
         self.snips_interface = SnipsInterface(self.snips_model_path)
+        logging.info("SNIPS intent engine started successfully!")
+
         self.rasa_interface = RASAInterface(self.rasa_server_port, self.rasa_model_path, self.base_log_dir)
 
         # Only start RASA server if its not in detached mode, else we assume server is already running
         if not self.rasa_detached_mode:
+            logging.info(f"Starting RASA intent engine server as a subprocess...")
             self.rasa_interface.start_server()
+            logging.info(f"RASA intent engine server started successfully! RASA server running at URL: 127.0.0.1:{self.rasa_server_port}")
+        
+        else:
+            logging.info(f"RASA intent engine detached mode detected! Assuming RASA server is running at URL: 127.0.0.1:{self.rasa_server_port}")
 
         self.rvc_stream_uuids = {}
         self.kuksa_client = KuksaInterface()
         self.kuksa_client.connect_kuksa_client()
         self.kuksa_client.authorize_kuksa_client()
+
+        logging.info(f"Loading and parsing mapping files...")
         self.mapper = Intent2VSSMapper()
+        logging.info(f"Successfully loaded and parsed mapping files.")
 
 
     def CheckServiceStatus(self, request, context):

@@ -17,8 +17,11 @@
 import time
 import json
 import threading
+import logging
 from kuksa_client import KuksaClientThread
 from agl_service_voiceagent.utils.config import get_config_value
+
+logging.basicConfig(level=logging.DEBUG)
 
 class KuksaInterface:
     """
@@ -102,11 +105,14 @@ class KuksaInterface:
 
                 if not self.get_kuksa_status():
                     print("[-] Error: Connection to Kuksa server failed.")
+                    logging.error("Connection to Kuksa server failed.")
                 else:
                     print("[+] Connection to Kuksa established.")
+                    logging.info("Connection to Kuksa established.")
 
         except Exception as e:
             print("[-] Error: Connection to Kuksa server failed. ", str(e))
+            logging.error(f"Connection to Kuksa server failed. {str(e)}")
 
     
     def authorize_kuksa_client(self):
@@ -119,10 +125,13 @@ class KuksaInterface:
             if "error" in response:
                 error_message = response.get("error", "Unknown error")
                 print(f"[-] Error: Authorization failed. {error_message}")
+                logging.error(f"Authorization failed. {error_message}")
             else:
                 print("[+] Kuksa client authorized successfully.")
+                logging.info("Kuksa client authorized successfully.")
         else:
             print("[-] Error: Kuksa client is not initialized. Call `connect_kuksa_client` first.")
+            logging.error("Kuksa client is not initialized. Call `connect_kuksa_client` first.")
 
 
     def send_values(self, path=None, value=None):
@@ -137,7 +146,8 @@ class KuksaInterface:
         """
         result = False
         if self.kuksa_client is None:
-            print("[-] Error: Kuksa client is not initialized.")
+            print(f"[-] Error: Failed to send value '{value}' to Kuksa. Kuksa client is not initialized.")
+            logging.error(f"Failed to send value '{value}' to Kuksa. Kuksa client is not initialized.")
             return
 
         if self.get_kuksa_status():
@@ -150,12 +160,15 @@ class KuksaInterface:
                 else:
                     error_message = response.get("error", "Unknown error")
                     print(f"[-] Error: Failed to send value '{value}' to Kuksa. {error_message}")
+                    logging.error(f"Failed to send value '{value}' to Kuksa. {error_message}")
             
             except Exception as e:
-                print("[-] Error: Failed to send values to Kuksa. ", str(e))
+                print(f"[-] Error: Failed to send value '{value}' to Kuksa. ", str(e))
+                logging.error(f"Failed to send value '{value}' to Kuksa. {str(e)}")
 
         else:
-            print("[-] Error: Connection to Kuksa failed.")
+            print(f"[-] Error: Failed to send value '{value}' to Kuksa. Connection to Kuksa failed.")
+            logging.error(f"Failed to send value '{value}' to Kuksa. Connection to Kuksa failed.")
 
         return result
     
@@ -171,7 +184,8 @@ class KuksaInterface:
         """
         result = None
         if self.kuksa_client is None:
-            print("[-] Error: Kuksa client is not initialized.")
+            print(f"[-] Error: Failed to get value at path '{path}' from Kuksa. Kuksa client is not initialized.")
+            logging.error(f"Failed to get value at path '{path}' from Kuksa. Kuksa client is not initialized.")
             return
 
         if self.get_kuksa_status():
@@ -185,13 +199,16 @@ class KuksaInterface:
                     
                 else:
                     error_message = response.get("error", "Unknown error")
-                    print(f"[-] Error: Failed to get value from Kuksa. {error_message}")
+                    print(f"[-] Error: Failed to get value at path '{path}' from Kuksa. {error_message}")
+                    logging.error(f"Failed to get value at path '{path}' from Kuksa. {error_message}")
             
             except Exception as e:
-                print("[-] Error: Failed to get values from Kuksa. ", str(e))
+                print(f"[-] Error: Failed to get value at path '{path}' from Kuksa. ", str(e))
+                logging.error(f"Failed to get value at path '{path}' from Kuksa. {str(e)}")
 
         else:
-            print("[-] Error: Connection to Kuksa failed.")
+            print(f"[-] Error: Failed to get value at path '{path}' from Kuksa. Connection to Kuksa failed.")
+            logging.error(f"Failed to get value at path '{path}' from Kuksa. Connection to Kuksa failed.")
 
         return result
     
@@ -206,5 +223,7 @@ class KuksaInterface:
                     self.kuksa_client.stop()
                     self.kuksa_client = None
                     print("[+] Kuksa client stopped.")
+                    logging.info("Kuksa client stopped.")
         except Exception as e:
             print("[-] Error: Failed to close Kuksa client. ", str(e))
+            logging.error(f"Failed to close Kuksa client. {str(e)}")

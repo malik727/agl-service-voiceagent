@@ -15,15 +15,17 @@
 # limitations under the License.
 
 import grpc
+import logging
 from concurrent import futures
 from agl_service_voiceagent.generated import voice_agent_pb2_grpc
 from agl_service_voiceagent.servicers.voice_agent_servicer import VoiceAgentServicer
 from agl_service_voiceagent.utils.config import get_config_value
 
+logging.basicConfig(level=logging.DEBUG)
+
 def run_server():
     SERVER_URL = get_config_value('SERVER_ADDRESS') + ":" + str(get_config_value('SERVER_PORT'))
     print("Starting Voice Agent Service...")
-    print(f"Server running at URL: {SERVER_URL}")
     print(f"STT Model Path: {get_config_value('STT_MODEL_PATH')}")
     print(f"Audio Store Directory: {get_config_value('BASE_AUDIO_DIR')}")
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -31,5 +33,7 @@ def run_server():
     server.add_insecure_port(SERVER_URL)
     print("Press Ctrl+C to stop the server.")
     print("Voice Agent Server started!")
+    print(f"Server running at URL: {SERVER_URL}")
+    logging.info(f"Voice Agent Service started in server mode! Server running at URL: {SERVER_URL}")
     server.start()
     server.wait_for_termination()

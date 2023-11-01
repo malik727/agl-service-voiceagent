@@ -25,11 +25,13 @@ generated_dir = os.path.join(current_dir, "generated")
 sys.path.append(generated_dir)
 
 import argparse
+import logging
 from agl_service_voiceagent.utils.config import set_config_path, load_config, update_config_value, get_config_value
 from agl_service_voiceagent.utils.common import add_trailing_slash
 from agl_service_voiceagent.server import run_server
 from agl_service_voiceagent.client import run_client
 
+logging.basicConfig(level=logging.DEBUG)
 
 def print_version():
     print("Automotive Grade Linux (AGL)")
@@ -68,7 +70,9 @@ def main():
         print_version()
 
     elif args.subcommand == 'run-server':
+        logging.info("Starting Voice Agent Service in server mode...")
         if not args.default and not args.config:
+            logging.info("Using CLI config params.")
             if not args.stt_model_path:
                 raise ValueError("The --stt-model-path is missing. Please provide a value. Use --help to see available options.")
             
@@ -133,10 +137,12 @@ def main():
             if cli_config_path :
                 cli_config_path  = os.path.abspath(cli_config_path) if not os.path.isabs(cli_config_path) else cli_config_path 
                 print(f"New config file path provided: {cli_config_path}. Overriding the default config file path.")
+                logging.info(f"New config file path provided: {cli_config_path}. Overriding the default config file path.")
                 set_config_path(cli_config_path)
                 load_config()
         
         elif args.default:
+            logging.info("Using the default config file.")
             # Contruct the default config file path
             config_path = os.path.join(current_dir, "config.ini")
 
@@ -155,6 +161,7 @@ def main():
         run_server()
 
     elif args.subcommand == 'run-client':
+        logging.info("Starting Voice Agent Service in client mode...")
         # Contruct the default config file path
         config_path = os.path.join(current_dir, "config.ini")
 
