@@ -17,7 +17,6 @@
 import grpc
 import time
 import threading
-import logging
 from agl_service_voiceagent.generated import voice_agent_pb2
 from agl_service_voiceagent.generated import voice_agent_pb2_grpc
 from agl_service_voiceagent.utils.audio_recorder import AudioRecorder
@@ -25,12 +24,11 @@ from agl_service_voiceagent.utils.wake_word import WakeWordDetector
 from agl_service_voiceagent.utils.stt_model import STTModel
 from agl_service_voiceagent.utils.kuksa_interface import KuksaInterface
 from agl_service_voiceagent.utils.mapper import Intent2VSSMapper
-from agl_service_voiceagent.utils.config import get_config_value
+from agl_service_voiceagent.utils.config import get_config_value, get_logger
 from agl_service_voiceagent.utils.common import generate_unique_uuid, delete_file
 from agl_service_voiceagent.nlu.snips_interface import SnipsInterface
 from agl_service_voiceagent.nlu.rasa_interface import RASAInterface
 
-logging.basicConfig(level=logging.DEBUG)
 
 class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
     """
@@ -56,42 +54,48 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         self.rasa_detached_mode = bool(int(get_config_value('RASA_DETACHED_MODE')))
         self.base_log_dir = get_config_value('BASE_LOG_DIR')
         self.store_voice_command = bool(int(get_config_value('STORE_VOICE_COMMANDS')))
+        self.logger = get_logger()
 
         # Initialize class methods
-        logging.info("Loading Speech to Text and Wake Word Model...")
+        self.logger.info("Loading Speech to Text and Wake Word Model...")
         self.stt_model = STTModel(self.stt_model_path, self.sample_rate)
         self.stt_wake_word_model = STTModel(self.wake_word_model_path, self.sample_rate)
-        logging.info("Speech to Text and Wake Word Model loaded successfully.")
+        self.logger.info("Speech to Text and Wake Word Model loaded successfully.")
 
-        logging.info("Starting SNIPS intent engine...")
+        self.logger.info("Starting SNIPS intent engine...")
         self.snips_interface = SnipsInterface(self.snips_model_path)
-        logging.info("SNIPS intent engine started successfully!")
+        self.logger.info("SNIPS intent engine started successfully!")
 
         self.rasa_interface = RASAInterface(self.rasa_server_port, self.rasa_model_path, self.base_log_dir)
 
         # Only start RASA server if its not in detached mode, else we assume server is already running
         if not self.rasa_detached_mode:
-            logging.info(f"Starting RASA intent engine server as a subprocess...")
+            self.logger.info(f"Starting RASA intent engine server as a subprocess...")
             self.rasa_interface.start_server()
-            logging.info(f"RASA intent engine server started successfully! RASA server running at URL: 127.0.0.1:{self.rasa_server_port}")
+            self.logger.info(f"RASA intent engine server started successfully! RASA server running at URL: 127.0.0.1:{self.rasa_server_port}")
         
         else:
-            logging.info(f"RASA intent engine detached mode detected! Assuming RASA server is running at URL: 127.0.0.1:{self.rasa_server_port}")
+            self.logger.info(f"RASA intent engine detached mode detected! Assuming RASA server is running at URL: 127.0.0.1:{self.rasa_server_port}")
 
         self.rvc_stream_uuids = {}
         self.kuksa_client = KuksaInterface()
         self.kuksa_client.connect_kuksa_client()
         self.kuksa_client.authorize_kuksa_client()
 
-        logging.info(f"Loading and parsing mapping files...")
+        self.logger.info(f"Loading and parsing mapping files...")
         self.mapper = Intent2VSSMapper()
-        logging.info(f"Successfully loaded and parsed mapping files.")
+        self.logger.info(f"Successfully loaded and parsed mapping files.")
 
 
     def CheckServiceStatus(self, request, context):
         """
         Check the status of the Voice Agent service including the version.
         """
+        # Log the unique request ID, client's IP address, and the endpoint
+        request_id = generate_unique_uuid(8)
+        client_ip = context.peer()
+        self.logger.info(f"[ReqID#{request_id}] Client {client_ip} made a request to CheckServiceStatus end-point.")
+
         response = voice_agent_pb2.ServiceStatus(
             version=self.service_version,
             status=True
@@ -103,6 +107,11 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         """
         Detect the wake word using the wake word detection model.
         """
+        # Log the unique request ID, client's IP address, and the endpoint
+        request_id = generate_unique_uuid(8)
+        client_ip = context.peer()
+        self.logger.info(f"[ReqID#{request_id}] Client {client_ip} made a request to DetectWakeWord end-point.")
+
         wake_word_detector = WakeWordDetector(self.wake_word, self.stt_model, self.channels, self.sample_rate, self.bits_per_sample)
         wake_word_detector.create_pipeline()
         detection_thread = threading.Thread(target=wake_word_detector.start_listening)
@@ -134,6 +143,11 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
                 if request.action == voice_agent_pb2.START:
                     status = voice_agent_pb2.REC_PROCESSING
                     stream_uuid = generate_unique_uuid(8)
+
+                    # Log the unique request ID, client's IP address, and the endpoint
+                    client_ip = context.peer()
+                    self.logger.info(f"[ReqID#{stream_uuid}] Client {client_ip} made a manual START request to RecognizeVoiceCommand end-point.")
+
                     recorder = AudioRecorder(self.stt_model, self.base_audio_dir, self.channels, self.sample_rate, self.bits_per_sample)
                     recorder.set_pipeline_mode("manual")
                     audio_file = recorder.create_pipeline()
@@ -148,6 +162,10 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
                 elif request.action == voice_agent_pb2.STOP:
                     stream_uuid = request.stream_id
                     status = voice_agent_pb2.REC_SUCCESS
+
+                    # Log the unique request ID, client's IP address, and the endpoint
+                    client_ip = context.peer()
+                    self.logger.info(f"[ReqID#{stream_uuid}] Client {client_ip} made a manual STOP request to RecognizeVoiceCommand end-point.")
 
                     recorder = self.rvc_stream_uuids[stream_uuid]["recorder"]
                     audio_file = self.rvc_stream_uuids[stream_uuid]["audio_file"]
@@ -205,6 +223,11 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         """
         Execute the voice command by sending the intent to Kuksa.
         """
+        # Log the unique request ID, client's IP address, and the endpoint
+        request_id = generate_unique_uuid(8)
+        client_ip = context.peer()
+        self.logger.info(f"[ReqID#{request_id}] Client {client_ip} made a request to ExecuteVoiceCommand end-point.")
+
         intent = request.intent
         intent_slots = request.intent_slots
         processed_slots = []
@@ -218,6 +241,13 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
         execution_list = self.mapper.parse_intent(intent, processed_slots)
         exec_response = f"Sorry, I failed to execute command against intent '{intent}'. Maybe try again with more specific instructions."
         exec_status = voice_agent_pb2.EXEC_ERROR
+
+        # Check for kuksa status, and try re-connecting again if status is False 
+        if not self.kuksa_client.get_kuksa_status():
+            self.logger.error(f"[ReqID#{request_id}] Kuksa client found disconnected. Trying to close old instance and re-connecting...")
+            self.kuksa_client.close_kuksa_client()
+            self.kuksa_client.connect_kuksa_client()
+            self.kuksa_client.authorize_kuksa_client()
 
         for execution_item in execution_list:
             print(execution_item)

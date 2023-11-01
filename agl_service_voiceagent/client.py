@@ -18,10 +18,9 @@ import time
 import grpc
 from agl_service_voiceagent.generated import voice_agent_pb2
 from agl_service_voiceagent.generated import voice_agent_pb2_grpc
-from agl_service_voiceagent.utils.config import get_config_value
 
-def run_client(mode, nlu_model):
-    SERVER_URL = get_config_value('SERVER_ADDRESS') + ":" + str(get_config_value('SERVER_PORT'))
+def run_client(mode, nlu_model, server_address, server_port):
+    SERVER_URL = server_address + ":" + server_port
     nlu_model = voice_agent_pb2.SNIPS if nlu_model == "snips" else voice_agent_pb2.RASA
     print("Starting Voice Agent Client...")
     print(f"Client connecting to URL: {SERVER_URL}")

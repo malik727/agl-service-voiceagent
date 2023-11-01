@@ -14,11 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-from agl_service_voiceagent.utils.config import get_config_value
+from agl_service_voiceagent.utils.config import get_config_value, get_logger
 from agl_service_voiceagent.utils.common import load_json_file, words_to_number
 
-logging.basicConfig(level=logging.DEBUG)
 
 class Intent2VSSMapper:
     """
@@ -35,6 +33,7 @@ class Intent2VSSMapper:
         vss_signals_spec_file = get_config_value("vss_signals_spec", "Mapper")
         self.intents_vss_map = load_json_file(intents_vss_map_file).get("intents", {})
         self.vss_signals_spec = load_json_file(vss_signals_spec_file).get("signals", {})
+        self.logger = get_logger()
 
         if not self.validate_signal_spec_structure():
             raise ValueError("[-] Invalid VSS signal specification structure.")
@@ -51,7 +50,7 @@ class Intent2VSSMapper:
             # Check if the required keys are present in the signal data
             if not all(key in signal_data for key in ['default_value', 'default_change_factor', 'actions', 'values', 'default_fallback', 'value_set_intents']):
                 print(f"[-] {signal_name}: Missing required keys in signal data.")
-                logging.error(f"{signal_name}: Missing required keys in signal data.")
+                self.logger.error(f"{signal_name}: Missing required keys in signal data.")
                 return False
 
             actions = signal_data['actions']
@@ -59,14 +58,14 @@ class Intent2VSSMapper:
             # Check if 'actions' is a dictionary with at least one action
             if not isinstance(actions, dict) or not actions:
                 print(f"[-] {signal_name}: Invalid 'actions' key in signal data. Must be an object with at least one action.")
-                logging.error(f"{signal_name}: Invalid 'actions' key in signal data. Must be an object with at least one action.")
+                self.logger.error(f"{signal_name}: Invalid 'actions' key in signal data. Must be an object with at least one action.")
                 return False
 
             # Check if the actions match the allowed actions ["set", "increase", "decrease"]
             for action in actions.keys():
                 if action not in ["set", "increase", "decrease"]:
                     print(f"[-] {signal_name}: Invalid action in signal data. Allowed actions: ['set', 'increase', 'decrease']")
-                    logging.error(f"{signal_name}: Invalid action in signal data. Allowed actions: ['set', 'increase', 'decrease']")
+                    self.logger.error(f"{signal_name}: Invalid action in signal data. Allowed actions: ['set', 'increase', 'decrease']")
                     return False
 
             # Check if the 'synonyms' list is present for each action and is either a list or None
@@ -74,7 +73,7 @@ class Intent2VSSMapper:
                 synonyms = action_data.get('synonyms')
                 if synonyms is not None and (not isinstance(synonyms, list) or not all(isinstance(synonym, str) for synonym in synonyms)):
                     print(f"[-] {signal_name}: Invalid 'synonyms' value in signal data. Must be a list of strings.")
-                    logging.error(f"{signal_name}: Invalid 'synonyms' value in signal data. Must be a list of strings.")
+                    self.logger.error(f"{signal_name}: Invalid 'synonyms' value in signal data. Must be a list of strings.")
                     return False
 
             values = signal_data['values']
@@ -82,13 +81,13 @@ class Intent2VSSMapper:
             # Check if 'values' is a dictionary with the required keys
             if not isinstance(values, dict) or not all(key in values for key in ['ranged', 'start', 'end', 'ignore', 'additional']):
                 print(f"[-] {signal_name}: Invalid 'values' key in signal data. Required keys: ['ranged', 'start', 'end', 'ignore', 'additional']")
-                logging.error(f"{signal_name}: Invalid 'values' key in signal data. Required keys: ['ranged', 'start', 'end', 'ignore', 'additional']")
+                self.logger.error(f"{signal_name}: Invalid 'values' key in signal data. Required keys: ['ranged', 'start', 'end', 'ignore', 'additional']")
                 return False
 
             # Check if 'ranged' is a boolean
             if not isinstance(values['ranged'], bool):
                 print(f"[-] {signal_name}: Invalid 'ranged' value in signal data. Allowed values: [true, false]")
-                logging.error(f"{signal_name}: Invalid 'ranged' value in signal data. Allowed values: [true, false]")
+                self.logger.error(f"{signal_name}: Invalid 'ranged' value in signal data. Allowed values: [true, false]")
                 return False
 
             default_fallback = signal_data['default_fallback']
@@ -96,7 +95,7 @@ class Intent2VSSMapper:
             # Check if 'default_fallback' is a boolean
             if not isinstance(default_fallback, bool):
                 print(f"[-] {signal_name}: Invalid 'default_fallback' value in signal data. Allowed values: [true, false]")
-                logging.error(f"{signal_name}: Invalid 'default_fallback' value in signal data. Allowed values: [true, false]")
+                self.logger.error(f"{signal_name}: Invalid 'default_fallback' value in signal data. Allowed values: [true, false]")
                 return False
 
         # If all checks pass, the self.vss_signals_spec structure is valid

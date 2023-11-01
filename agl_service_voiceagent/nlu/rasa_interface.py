@@ -40,7 +40,7 @@ class RASAInterface:
         self.max_threads = max_threads
         self.server_process = None
         self.thread_pool = ThreadPoolExecutor(max_workers=max_threads)
-        self.log_file = log_dir+"rasa_server_logs.txt"
+        self.log_file = log_dir+"rasa_server.log"
 
 
     def _start_server(self):

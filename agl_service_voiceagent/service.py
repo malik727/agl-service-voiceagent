@@ -25,13 +25,10 @@ generated_dir = os.path.join(current_dir, "generated")
 sys.path.append(generated_dir)
 
 import argparse
-import logging
-from agl_service_voiceagent.utils.config import set_config_path, load_config, update_config_value, get_config_value
+from agl_service_voiceagent.utils.config import set_config_path, load_config, update_config_value, get_config_value, get_logger
 from agl_service_voiceagent.utils.common import add_trailing_slash
 from agl_service_voiceagent.server import run_server
 from agl_service_voiceagent.client import run_client
-
-logging.basicConfig(level=logging.DEBUG)
 
 def print_version():
     print("Automotive Grade Linux (AGL)")
@@ -63,6 +60,8 @@ def main():
 
     client_parser.add_argument('--mode', required=True, help='Mode to run the client in. Supported modes: "wake-word", "auto" and "manual".')
     client_parser.add_argument('--nlu', required=True, help='NLU engine to use. Supported NLU egnines: "snips" and "rasa".')
+    client_parser.add_argument('--server-address', required=True, help='Address of the gRPC server running the Voice Agent Service.')
+    client_parser.add_argument('--server-port', required=True, help='Port of the gRPC server running the Voice Agent Service.')
 
     args = parser.parse_args()
     
@@ -70,9 +69,7 @@ def main():
         print_version()
 
     elif args.subcommand == 'run-server':
-        logging.info("Starting Voice Agent Service in server mode...")
         if not args.default and not args.config:
-            logging.info("Using CLI config params.")
             if not args.stt_model_path:
                 raise ValueError("The --stt-model-path is missing. Please provide a value. Use --help to see available options.")
             
@@ -94,6 +91,9 @@ def main():
             # Load the config values from the config file
             set_config_path(config_path)
             load_config()
+
+            logger = get_logger()
+            logger.info("Starting Voice Agent Service in server mode using CLI provided params...")
             
             # Get the values provided by the user
             stt_path = args.stt_model_path
@@ -137,18 +137,24 @@ def main():
             if cli_config_path :
                 cli_config_path  = os.path.abspath(cli_config_path) if not os.path.isabs(cli_config_path) else cli_config_path 
                 print(f"New config file path provided: {cli_config_path}. Overriding the default config file path.")
-                logging.info(f"New config file path provided: {cli_config_path}. Overriding the default config file path.")
                 set_config_path(cli_config_path)
                 load_config()
+
+                logger = get_logger()
+                logger.info(f"Starting Voice Agent Service in server mode using provided config file at path '{cli_config_path}' ...")
         
         elif args.default:
-            logging.info("Using the default config file.")
             # Contruct the default config file path
             config_path = os.path.join(current_dir, "config.ini")
 
             # Load the config values from the config file
             set_config_path(config_path)
             load_config()
+
+            logger = get_logger()
+            logger.info(f"Starting Voice Agent Service in server mode using the default config file...")
+
+            
 
         # create the base audio dir if not exists
         if not os.path.exists(get_config_value('BASE_AUDIO_DIR')):
@@ -161,14 +167,6 @@ def main():
         run_server()
 
     elif args.subcommand == 'run-client':
-        logging.info("Starting Voice Agent Service in client mode...")
-        # Contruct the default config file path
-        config_path = os.path.join(current_dir, "config.ini")
-
-        # Load the config values from the config file
-        set_config_path(config_path)
-        load_config()
-
         mode = args.mode
         if mode not in ['wake-word', 'auto', 'manual']:
             raise ValueError("Invalid mode. Supported modes: 'wake-word', 'auto' and 'manual'. Use --help to see available options.")
@@ -177,7 +175,10 @@ def main():
         if model not in ['snips', 'rasa']:
             raise ValueError("Invalid NLU engine. Supported NLU engines: 'snips' and 'rasa'. Use --help to see available options.")
         
-        run_client(mode, model)
+        server_address = args.server_address
+        server_port = args.server_port
+        
+        run_client(mode, model, server_address, server_port)
 
     else:
         print_version()
