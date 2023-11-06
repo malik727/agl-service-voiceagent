@@ -285,11 +285,11 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
                         
                         else:
                             exec_response = f"Uh oh, there is no value set for intent '{intent}'. Why not try setting a value first?"
-                            exec_status = voice_agent_pb2.EXEC_KUKSA_CONN_ERROR
+                            exec_status = voice_agent_pb2.KUKSA_CONN_ERROR
 
             else:
                 exec_response = "Uh oh, I failed to connect to Kuksa."
-                exec_status = voice_agent_pb2.EXEC_KUKSA_CONN_ERROR
+                exec_status = voice_agent_pb2.KUKSA_CONN_ERROR
 
         response = voice_agent_pb2.ExecuteResult(
             response=exec_response,

@@ -52,7 +52,7 @@ class KuksaInterface:
         # get config values
         self.ip = str(get_config_value("ip", "Kuksa"))
         self.port = str(get_config_value("port", "Kuksa"))
-        self.insecure = get_config_value("insecure", "Kuksa")
+        self.insecure = bool(int(get_config_value("insecure", "Kuksa")))
         self.protocol = get_config_value("protocol", "Kuksa")
         self.token = get_config_value("token", "Kuksa")
         self.logger = get_logger()
