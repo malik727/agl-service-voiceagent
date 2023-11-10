@@ -98,7 +98,8 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
 
         response = voice_agent_pb2.ServiceStatus(
             version=self.service_version,
-            status=True
+            status=True,
+            wake_word=self.wake_word,
         )
         return response
 

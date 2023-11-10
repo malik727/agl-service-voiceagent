@@ -55,12 +55,45 @@ class KuksaInterface:
         self.insecure = bool(int(get_config_value("insecure", "Kuksa")))
         self.protocol = get_config_value("protocol", "Kuksa")
         self.token = get_config_value("token", "Kuksa")
+        self.tls_server_name = get_config_value("tls_server_name", "Kuksa")
         self.logger = get_logger()
+
+        # validate config
+        if not self.validate_config():
+            exit(1)
 
         print(self.ip, self.port, self.insecure, self.protocol, self.token)
 
         # define class methods
         self.kuksa_client = None
+
+    def validate_config(self):
+        """
+        Validate the Kuksa client configuration.
+
+        Returns:
+            bool: True if the configuration is valid, False otherwise.
+        """
+        if self.ip is None:
+            print("[-] Error: Kuksa IP address is not set.")
+            self.logger.error("Kuksa IP address is not set.")
+            return False
+
+        if self.port is None:
+            print("[-] Error: Kuksa port is not set.")
+            self.logger.error("Kuksa port is not set.")
+            return False
+
+        if self.token is None:
+            print("[-] Warning: Kuksa auth token is not set.")
+            self.logger.warning("Kuksa auth token is not set.")
+
+        if self.protocol != "ws" and self.protocol != "grpc":
+            print("[-] Error: Invalid Kuksa protocol. Only 'ws' and 'grpc' are supported.")
+            self.logger.error("Invalid Kuksa protocol. Only 'ws' and 'grpc' are supported.")
+            return False
+
+        return True
 
 
     def get_kuksa_client(self):
@@ -97,6 +130,7 @@ class KuksaInterface:
                         "port": self.port,
                         "insecure": self.insecure,
                         "protocol": self.protocol,
+                        "tls_server_name": self.tls_server_name
                     })
                     self.kuksa_client.start()
                     time.sleep(2)  # Give the thread time to start
@@ -119,11 +153,17 @@ class KuksaInterface:
         """
         if self.kuksa_client:
             response = self.kuksa_client.authorize(self.token)
-            response = json.loads(response)
-            if "error" in response:
+
+            if self.protocol == "ws" and "error" in json.loads(response):
+                response = json.loads(response)
                 error_message = response.get("error", "Unknown error")
                 print(f"[-] Error: Authorization failed. {error_message}")
                 self.logger.error(f"Authorization failed. {error_message}")
+
+            elif self.protocol == "grpc" and "error" in response:
+                print("[-] Error: Authorization failed.")
+                self.logger.error("Authorization failed.")
+
             else:
                 print("[+] Kuksa client authorized successfully.")
                 self.logger.info("Kuksa client authorized successfully.")
@@ -146,17 +186,19 @@ class KuksaInterface:
         if self.kuksa_client is None:
             print(f"[-] Error: Failed to send value '{value}' to Kuksa. Kuksa client is not initialized.")
             self.logger.error(f"Failed to send value '{value}' to Kuksa. Kuksa client is not initialized.")
-            return
+            return result
 
         if self.get_kuksa_status():
             try:
                 response = self.kuksa_client.setValue(path, value)
-                response = json.loads(response)
+
                 if not "error" in response:
                     print(f"[+] Value '{value}' sent to Kuksa successfully.")
                     result = True
+
                 else:
-                    error_message = response.get("error", "Unknown error")
+                    response = json.loads(response)
+                    error_message = response.get("error", "{\"message\": \"Unknown error.\"}")
                     print(f"[-] Error: Failed to send value '{value}' to Kuksa. {error_message}")
                     self.logger.error(f"Failed to send value '{value}' to Kuksa. {error_message}")
             
@@ -184,19 +226,23 @@ class KuksaInterface:
         if self.kuksa_client is None:
             print(f"[-] Error: Failed to get value at path '{path}' from Kuksa. Kuksa client is not initialized.")
             self.logger.error(f"Failed to get value at path '{path}' from Kuksa. Kuksa client is not initialized.")
-            return
+            return result
 
         if self.get_kuksa_status():
             try:
                 response = self.kuksa_client.getValue(path)
                 response = json.loads(response)
-                if not "error" in response:
+                if self.protocol == "ws" and not "error" in response:
                     result = response.get("data", None)
                     result = result.get("dp", None)
                     result = result.get("value", None)
-                    
+                
+                elif self.protocol == "grpc" and not "error" in response:
+                    result = response.get("value", None)
+                    result = result.get("value", None)
+
                 else:
-                    error_message = response.get("error", "Unknown error")
+                    error_message = response.get("error", "{\"message\": \"Unknown error.\"}")
                     print(f"[-] Error: Failed to get value at path '{path}' from Kuksa. {error_message}")
                     self.logger.error(f"Failed to get value at path '{path}' from Kuksa. {error_message}")
             

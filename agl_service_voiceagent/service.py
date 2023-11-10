@@ -60,7 +60,7 @@ def main():
 
     client_parser.add_argument('--server-address', required=True, help='Address of the gRPC server running the Voice Agent Service.')
     client_parser.add_argument('--server-port', required=True, help='Port of the gRPC server running the Voice Agent Service.')
-    client_parser.add_argument('--mode', required=True, help='Mode to run the client in. Supported modes: "wake-word", "auto" and "manual".')
+    client_parser.add_argument('--mode', required=True, help='Mode to run the client in. Supported modes: "status", "wake-word", "auto" and "manual".')
     client_parser.add_argument('--nlu', help='NLU engine to use. Supported NLU egnines: "snips" and "rasa".')
     client_parser.add_argument('--recording-time', help='Number of seconds to continue recording the voice command. Required by the \'manual\' mode. Defaults to 10 seconds.')
 
@@ -173,7 +173,7 @@ def main():
         mode = args.mode
         recording_time = 5
 
-        if mode not in ['wake-word', 'auto', 'manual']:
+        if mode not in ['status', 'wake-word', 'auto', 'manual']:
             print("Error: Invalid value for --mode. Supported modes: 'wake-word', 'auto' and 'manual'. Use --help to see available options.")
             exit(1)
         

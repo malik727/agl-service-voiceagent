@@ -27,6 +27,15 @@ def run_client(server_address, server_port, mode, nlu_engine, recording_time):
     with grpc.insecure_channel(SERVER_URL) as channel:
         print("Press Ctrl+C to stop the client.")
         print("Voice Agent Client started!")
+        if mode == 'status':
+            stub = voice_agent_pb2_grpc.VoiceAgentServiceStub(channel)
+            print("[+] Checking status...")
+            status_request = voice_agent_pb2.Empty()
+            status_result = stub.CheckServiceStatus(status_request)
+            print("Version:", status_result.version)
+            print("Status:", status_result.status)
+            print("Wake Word:", status_result.wake_word)
+
         if mode == 'wake-word':
             stub = voice_agent_pb2_grpc.VoiceAgentServiceStub(channel)
             print("[+] Listening for wake word...")

@@ -46,6 +46,7 @@ message Empty {}
 message ServiceStatus {
   string version = 1;
   bool status = 2;  
+  string wake_word = 3;
 }
 
 message WakeWordStatus {
