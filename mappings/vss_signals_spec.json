@@ -175,16 +175,16 @@
             "default_change_factor": 2,
             "actions": {
                 "set": {
-                    "intents": ["hvac_fan_speed_action"],
+                    "intents": ["hvac_temperature_action"],
                     "synonyms": ["set", "change", "adjust"]
                 },
                 "increase": {
-                    "intents":["hvac_fan_speed_action"],
+                    "intents":["hvac_temperature_action"],
                     "synonyms": ["increase", "up", "boost", "boosting", "raise", "heat", "warm", "warmer"],
                     "modifier_intents": ["to_or_by"]
                 }, 
                 "decrease": {
-                    "intents": ["hvac_fan_speed_action"],
+                    "intents": ["hvac_temperature_action"],
                     "synonyms": ["decrease", "lower", "down", "cool", "colder", "reduce", "back"],
                     "modifier_intents": ["to_or_by"]
                 }
@@ -209,16 +209,16 @@
             "default_change_factor": 2,
             "actions": {
                 "set": {
-                    "intents": ["hvac_fan_speed_action"],
+                    "intents": ["hvac_temperature_action"],
                     "synonyms": ["set", "change", "adjust"]
                 },
                 "increase": {
-                    "intents":["hvac_fan_speed_action"],
+                    "intents":["hvac_temperature_action"],
                     "synonyms": ["increase", "up", "boost", "boosting", "raise", "heat", "warm", "warmer"],
                     "modifier_intents": ["to_or_by"]
                 }, 
                 "decrease": {
-                    "intents": ["hvac_fan_speed_action"],
+                    "intents": ["hvac_temperature_action"],
                     "synonyms": ["decrease", "lower", "down", "cool", "colder", "reduce", "back"],
                     "modifier_intents": ["to_or_by"]
                 }
@@ -243,16 +243,16 @@
             "default_change_factor": 2,
             "actions": {
                 "set": {
-                    "intents": ["hvac_fan_speed_action"],
+                    "intents": ["hvac_temperature_action"],
                     "synonyms": ["set", "change", "adjust"]
                 },
                 "increase": {
-                    "intents":["hvac_fan_speed_action"],
+                    "intents":["hvac_temperature_action"],
                     "synonyms": ["increase", "up", "boost", "boosting", "raise", "heat", "warm", "warmer"],
                     "modifier_intents": ["to_or_by"]
                 }, 
                 "decrease": {
-                    "intents": ["hvac_fan_speed_action"],
+                    "intents": ["hvac_temperature_action"],
                     "synonyms": ["decrease", "lower", "down", "cool", "colder", "reduce", "back"],
                     "modifier_intents": ["to_or_by"]
                 }
@@ -277,16 +277,16 @@
             "default_change_factor": 2,
             "actions": {
                 "set": {
-                    "intents": ["hvac_fan_speed_action"],
+                    "intents": ["hvac_temperature_action"],
                     "synonyms": ["set", "change", "adjust"]
                 },
                 "increase": {
-                    "intents":["hvac_fan_speed_action"],
+                    "intents":["hvac_temperature_action"],
                     "synonyms": ["increase", "up", "boost", "boosting", "raise", "heat", "warm", "warmer"],
                     "modifier_intents": ["to_or_by"]
                 }, 
                 "decrease": {
-                    "intents": ["hvac_fan_speed_action"],
+                    "intents": ["hvac_temperature_action"],
                     "synonyms": ["decrease", "lower", "down", "cool", "colder", "reduce", "back"],
                     "modifier_intents": ["to_or_by"]
                 }

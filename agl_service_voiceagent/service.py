@@ -46,6 +46,7 @@ def main():
     server_parser = subparsers.add_parser('run-server', help='Run the Voice Agent gRPC Server')
     client_parser = subparsers.add_parser('run-client', help='Run the Voice Agent gRPC Client')
     
+    # Add the arguments for the server
     server_parser.add_argument('--default', action='store_true', help='Starts the server based on default config file.')
     server_parser.add_argument('--config', required=False, help='Path to a config file. Server is started based on this config file.')
     server_parser.add_argument('--stt-model-path', required=False, help='Path to the Speech To Text model for Voice Commad detection. Currently only supports VOSK Kaldi.')
@@ -58,10 +59,12 @@ def main():
     server_parser.add_argument('--audio-store-dir', required=False, help='Directory to store the generated audio files.')
     server_parser.add_argument('--log-store-dir', required=False, help='Directory to store the generated log files.')
 
+    # Add the arguments for the client
     client_parser.add_argument('--server-address', required=True, help='Address of the gRPC server running the Voice Agent Service.')
     client_parser.add_argument('--server-port', required=True, help='Port of the gRPC server running the Voice Agent Service.')
-    client_parser.add_argument('--mode', required=True, help='Mode to run the client in. Supported modes: "status", "wake-word", "auto" and "manual".')
-    client_parser.add_argument('--nlu', help='NLU engine to use. Supported NLU egnines: "snips" and "rasa".')
+    client_parser.add_argument('--action', required=True, help='Action to perform. Supported actions: "GetStatus", "DetectWakeWord", "ExecuteVoiceCommand" and "ExecuteTextCommand".')
+    client_parser.add_argument('--mode', help='Mode to run the client in. Supported modes: "auto" and "manual".')
+    client_parser.add_argument('--nlu', help='NLU engine/model to use. Supported NLU engines: "snips" and "rasa".')
     client_parser.add_argument('--recording-time', help='Number of seconds to continue recording the voice command. Required by the \'manual\' mode. Defaults to 10 seconds.')
 
     args = parser.parse_args()
@@ -170,14 +173,15 @@ def main():
         server_address = args.server_address
         server_port = args.server_port
         nlu_engine = ""
-        mode = args.mode
-        recording_time = 5
+        mode = ""
+        action = args.action
+        recording_time = 5 # seconds
 
-        if mode not in ['status', 'wake-word', 'auto', 'manual']:
-            print("Error: Invalid value for --mode. Supported modes: 'wake-word', 'auto' and 'manual'. Use --help to see available options.")
+        if action not in ["GetStatus", "DetectWakeWord", "ExecuteVoiceCommand", "ExecuteTextCommand"]:
+            print("Error: Invalid value for --action. Supported actions: 'GetStatus', 'DetectWakeWord', 'ExecuteVoiceCommand' and 'ExecuteTextCommand'. Use --help to see available options.")
             exit(1)
         
-        if mode in ["auto", "manual"]:
+        if action in ["ExecuteVoiceCommand", "ExecuteTextCommand"]:
             if not args.nlu:
                 print("Error: The --nlu flag is missing. Please provide a value for intent engine. Supported NLU engines: 'snips' and 'rasa'.  Use --help to see available options.")
                 exit(1)
@@ -186,11 +190,17 @@ def main():
             if nlu_engine not in ['snips', 'rasa']:
                 print("Error: Invalid value for --nlu. Supported NLU engines: 'snips' and 'rasa'. Use --help to see available options.")
                 exit(1)
+
+        if action in ["ExecuteVoiceCommand"]:
+            if not args.mode:
+                print("Error: The --mode flag is missing. Please provide a value for mode. Supported modes: 'auto' and 'manual'.  Use --help to see available options.")
+                exit(1)
             
+            mode = args.mode
             if mode == "manual" and args.recording_time:
                 recording_time = int(args.recording_time)
         
-        run_client(server_address, server_port, mode, nlu_engine, recording_time)
+        run_client(server_address, server_port, action, mode, nlu_engine, recording_time)
 
     else:
         print_version()

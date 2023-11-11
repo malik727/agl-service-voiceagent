@@ -28,6 +28,8 @@ class RecognizeStatusType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     REC_PROCESSING: _ClassVar[RecognizeStatusType]
     VOICE_NOT_RECOGNIZED: _ClassVar[RecognizeStatusType]
     INTENT_NOT_RECOGNIZED: _ClassVar[RecognizeStatusType]
+    TEXT_NOT_RECOGNIZED: _ClassVar[RecognizeStatusType]
+    NLU_MODEL_NOT_SUPPORTED: _ClassVar[RecognizeStatusType]
 
 class ExecuteStatusType(int, metaclass=_enum_type_wrapper.EnumTypeWrapper):
     __slots__ = []
@@ -47,6 +49,8 @@ REC_SUCCESS: RecognizeStatusType
 REC_PROCESSING: RecognizeStatusType
 VOICE_NOT_RECOGNIZED: RecognizeStatusType
 INTENT_NOT_RECOGNIZED: RecognizeStatusType
+TEXT_NOT_RECOGNIZED: RecognizeStatusType
+NLU_MODEL_NOT_SUPPORTED: RecognizeStatusType
 EXEC_ERROR: ExecuteStatusType
 EXEC_SUCCESS: ExecuteStatusType
 KUKSA_CONN_ERROR: ExecuteStatusType
@@ -67,13 +71,35 @@ class ServiceStatus(_message.Message):
     wake_word: str
     def __init__(self, version: _Optional[str] = ..., status: bool = ..., wake_word: _Optional[str] = ...) -> None: ...
 
+class VoiceAudio(_message.Message):
+    __slots__ = ["audio_chunk", "audio_format", "sample_rate", "language"]
+    AUDIO_CHUNK_FIELD_NUMBER: _ClassVar[int]
+    AUDIO_FORMAT_FIELD_NUMBER: _ClassVar[int]
+    SAMPLE_RATE_FIELD_NUMBER: _ClassVar[int]
+    LANGUAGE_FIELD_NUMBER: _ClassVar[int]
+    audio_chunk: bytes
+    audio_format: str
+    sample_rate: int
+    language: str
+    def __init__(self, audio_chunk: _Optional[bytes] = ..., audio_format: _Optional[str] = ..., sample_rate: _Optional[int] = ..., language: _Optional[str] = ...) -> None: ...
+
 class WakeWordStatus(_message.Message):
     __slots__ = ["status"]
     STATUS_FIELD_NUMBER: _ClassVar[int]
     status: bool
     def __init__(self, status: bool = ...) -> None: ...
 
-class RecognizeControl(_message.Message):
+class S_RecognizeVoiceControl(_message.Message):
+    __slots__ = ["audio_stream", "nlu_model", "stream_id"]
+    AUDIO_STREAM_FIELD_NUMBER: _ClassVar[int]
+    NLU_MODEL_FIELD_NUMBER: _ClassVar[int]
+    STREAM_ID_FIELD_NUMBER: _ClassVar[int]
+    audio_stream: VoiceAudio
+    nlu_model: NLUModel
+    stream_id: str
+    def __init__(self, audio_stream: _Optional[_Union[VoiceAudio, _Mapping]] = ..., nlu_model: _Optional[_Union[NLUModel, str]] = ..., stream_id: _Optional[str] = ...) -> None: ...
+
+class RecognizeVoiceControl(_message.Message):
     __slots__ = ["action", "nlu_model", "record_mode", "stream_id"]
     ACTION_FIELD_NUMBER: _ClassVar[int]
     NLU_MODEL_FIELD_NUMBER: _ClassVar[int]
@@ -84,6 +110,14 @@ class RecognizeControl(_message.Message):
     record_mode: RecordMode
     stream_id: str
     def __init__(self, action: _Optional[_Union[RecordAction, str]] = ..., nlu_model: _Optional[_Union[NLUModel, str]] = ..., record_mode: _Optional[_Union[RecordMode, str]] = ..., stream_id: _Optional[str] = ...) -> None: ...
+
+class RecognizeTextControl(_message.Message):
+    __slots__ = ["text_command", "nlu_model"]
+    TEXT_COMMAND_FIELD_NUMBER: _ClassVar[int]
+    NLU_MODEL_FIELD_NUMBER: _ClassVar[int]
+    text_command: str
+    nlu_model: NLUModel
+    def __init__(self, text_command: _Optional[str] = ..., nlu_model: _Optional[_Union[NLUModel, str]] = ...) -> None: ...
 
 class IntentSlot(_message.Message):
     __slots__ = ["name", "value"]

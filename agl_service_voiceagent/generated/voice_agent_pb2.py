@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11voice_agent.proto\"\x07\n\x05\x45mpty\"C\n\rServiceStatus\x12\x0f\n\x07version\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\x08\x12\x11\n\twake_word\x18\x03 \x01(\t\" \n\x0eWakeWordStatus\x12\x0e\n\x06status\x18\x01 \x01(\x08\"\x84\x01\n\x10RecognizeControl\x12\x1d\n\x06\x61\x63tion\x18\x01 \x01(\x0e\x32\r.RecordAction\x12\x1c\n\tnlu_model\x18\x02 \x01(\x0e\x32\t.NLUModel\x12 \n\x0brecord_mode\x18\x03 \x01(\x0e\x32\x0b.RecordMode\x12\x11\n\tstream_id\x18\x04 \x01(\t\")\n\nIntentSlot\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"\x8e\x01\n\x0fRecognizeResult\x12\x0f\n\x07\x63ommand\x18\x01 \x01(\t\x12\x0e\n\x06intent\x18\x02 \x01(\t\x12!\n\x0cintent_slots\x18\x03 \x03(\x0b\x32\x0b.IntentSlot\x12\x11\n\tstream_id\x18\x04 \x01(\t\x12$\n\x06status\x18\x05 \x01(\x0e\x32\x14.RecognizeStatusType\"A\n\x0c\x45xecuteInput\x12\x0e\n\x06intent\x18\x01 \x01(\t\x12!\n\x0cintent_slots\x18\x02 \x03(\x0b\x32\x0b.IntentSlot\"E\n\rExecuteResult\x12\x10\n\x08response\x18\x01 \x01(\t\x12\"\n\x06status\x18\x02 \x01(\x0e\x32\x12.ExecuteStatusType*#\n\x0cRecordAction\x12\t\n\x05START\x10\x00\x12\x08\n\x04STOP\x10\x01*\x1f\n\x08NLUModel\x12\t\n\x05SNIPS\x10\x00\x12\x08\n\x04RASA\x10\x01*\"\n\nRecordMode\x12\n\n\x06MANUAL\x10\x00\x12\x08\n\x04\x41UTO\x10\x01*~\n\x13RecognizeStatusType\x12\r\n\tREC_ERROR\x10\x00\x12\x0f\n\x0bREC_SUCCESS\x10\x01\x12\x12\n\x0eREC_PROCESSING\x10\x02\x12\x18\n\x14VOICE_NOT_RECOGNIZED\x10\x03\x12\x19\n\x15INTENT_NOT_RECOGNIZED\x10\x04*\x82\x01\n\x11\x45xecuteStatusType\x12\x0e\n\nEXEC_ERROR\x10\x00\x12\x10\n\x0c\x45XEC_SUCCESS\x10\x01\x12\x14\n\x10KUKSA_CONN_ERROR\x10\x02\x12\x18\n\x14INTENT_NOT_SUPPORTED\x10\x03\x12\x1b\n\x17INTENT_SLOTS_INCOMPLETE\x10\x04\x32\xe4\x01\n\x11VoiceAgentService\x12,\n\x12\x43heckServiceStatus\x12\x06.Empty\x1a\x0e.ServiceStatus\x12+\n\x0e\x44\x65tectWakeWord\x12\x06.Empty\x1a\x0f.WakeWordStatus0\x01\x12>\n\x15RecognizeVoiceCommand\x12\x11.RecognizeControl\x1a\x10.RecognizeResult(\x01\x12\x34\n\x13\x45xecuteVoiceCommand\x12\r.ExecuteInput\x1a\x0e.ExecuteResultb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x11voice_agent.proto\"\x07\n\x05\x45mpty\"C\n\rServiceStatus\x12\x0f\n\x07version\x18\x01 \x01(\t\x12\x0e\n\x06status\x18\x02 \x01(\x08\x12\x11\n\twake_word\x18\x03 \x01(\t\"^\n\nVoiceAudio\x12\x13\n\x0b\x61udio_chunk\x18\x01 \x01(\x0c\x12\x14\n\x0c\x61udio_format\x18\x02 \x01(\t\x12\x13\n\x0bsample_rate\x18\x03 \x01(\x05\x12\x10\n\x08language\x18\x04 \x01(\t\" \n\x0eWakeWordStatus\x12\x0e\n\x06status\x18\x01 \x01(\x08\"m\n\x17S_RecognizeVoiceControl\x12!\n\x0c\x61udio_stream\x18\x01 \x01(\x0b\x32\x0b.VoiceAudio\x12\x1c\n\tnlu_model\x18\x02 \x01(\x0e\x32\t.NLUModel\x12\x11\n\tstream_id\x18\x03 \x01(\t\"\x89\x01\n\x15RecognizeVoiceControl\x12\x1d\n\x06\x61\x63tion\x18\x01 \x01(\x0e\x32\r.RecordAction\x12\x1c\n\tnlu_model\x18\x02 \x01(\x0e\x32\t.NLUModel\x12 \n\x0brecord_mode\x18\x03 \x01(\x0e\x32\x0b.RecordMode\x12\x11\n\tstream_id\x18\x04 \x01(\t\"J\n\x14RecognizeTextControl\x12\x14\n\x0ctext_command\x18\x01 \x01(\t\x12\x1c\n\tnlu_model\x18\x02 \x01(\x0e\x32\t.NLUModel\")\n\nIntentSlot\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"\x8e\x01\n\x0fRecognizeResult\x12\x0f\n\x07\x63ommand\x18\x01 \x01(\t\x12\x0e\n\x06intent\x18\x02 \x01(\t\x12!\n\x0cintent_slots\x18\x03 \x03(\x0b\x32\x0b.IntentSlot\x12\x11\n\tstream_id\x18\x04 \x01(\t\x12$\n\x06status\x18\x05 \x01(\x0e\x32\x14.RecognizeStatusType\"A\n\x0c\x45xecuteInput\x12\x0e\n\x06intent\x18\x01 \x01(\t\x12!\n\x0cintent_slots\x18\x02 \x03(\x0b\x32\x0b.IntentSlot\"E\n\rExecuteResult\x12\x10\n\x08response\x18\x01 \x01(\t\x12\"\n\x06status\x18\x02 \x01(\x0e\x32\x12.ExecuteStatusType*#\n\x0cRecordAction\x12\t\n\x05START\x10\x00\x12\x08\n\x04STOP\x10\x01*\x1f\n\x08NLUModel\x12\t\n\x05SNIPS\x10\x00\x12\x08\n\x04RASA\x10\x01*\"\n\nRecordMode\x12\n\n\x06MANUAL\x10\x00\x12\x08\n\x04\x41UTO\x10\x01*\xb4\x01\n\x13RecognizeStatusType\x12\r\n\tREC_ERROR\x10\x00\x12\x0f\n\x0bREC_SUCCESS\x10\x01\x12\x12\n\x0eREC_PROCESSING\x10\x02\x12\x18\n\x14VOICE_NOT_RECOGNIZED\x10\x03\x12\x19\n\x15INTENT_NOT_RECOGNIZED\x10\x04\x12\x17\n\x13TEXT_NOT_RECOGNIZED\x10\x05\x12\x1b\n\x17NLU_MODEL_NOT_SUPPORTED\x10\x06*\x82\x01\n\x11\x45xecuteStatusType\x12\x0e\n\nEXEC_ERROR\x10\x00\x12\x10\n\x0c\x45XEC_SUCCESS\x10\x01\x12\x14\n\x10KUKSA_CONN_ERROR\x10\x02\x12\x18\n\x14INTENT_NOT_SUPPORTED\x10\x03\x12\x1b\n\x17INTENT_SLOTS_INCOMPLETE\x10\x04\x32\xa4\x03\n\x11VoiceAgentService\x12,\n\x12\x43heckServiceStatus\x12\x06.Empty\x1a\x0e.ServiceStatus\x12\x34\n\x10S_DetectWakeWord\x12\x0b.VoiceAudio\x1a\x0f.WakeWordStatus(\x01\x30\x01\x12+\n\x0e\x44\x65tectWakeWord\x12\x06.Empty\x1a\x0f.WakeWordStatus0\x01\x12G\n\x17S_RecognizeVoiceCommand\x12\x18.S_RecognizeVoiceControl\x1a\x10.RecognizeResult(\x01\x12\x43\n\x15RecognizeVoiceCommand\x12\x16.RecognizeVoiceControl\x1a\x10.RecognizeResult(\x01\x12?\n\x14RecognizeTextCommand\x12\x15.RecognizeTextControl\x1a\x10.RecognizeResult\x12/\n\x0e\x45xecuteCommand\x12\r.ExecuteInput\x1a\x0e.ExecuteResultb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -21,32 +21,38 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'voice_agent_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _globals['_RECORDACTION']._serialized_start=594
-  _globals['_RECORDACTION']._serialized_end=629
-  _globals['_NLUMODEL']._serialized_start=631
-  _globals['_NLUMODEL']._serialized_end=662
-  _globals['_RECORDMODE']._serialized_start=664
-  _globals['_RECORDMODE']._serialized_end=698
-  _globals['_RECOGNIZESTATUSTYPE']._serialized_start=700
-  _globals['_RECOGNIZESTATUSTYPE']._serialized_end=826
-  _globals['_EXECUTESTATUSTYPE']._serialized_start=829
-  _globals['_EXECUTESTATUSTYPE']._serialized_end=959
+  _globals['_RECORDACTION']._serialized_start=882
+  _globals['_RECORDACTION']._serialized_end=917
+  _globals['_NLUMODEL']._serialized_start=919
+  _globals['_NLUMODEL']._serialized_end=950
+  _globals['_RECORDMODE']._serialized_start=952
+  _globals['_RECORDMODE']._serialized_end=986
+  _globals['_RECOGNIZESTATUSTYPE']._serialized_start=989
+  _globals['_RECOGNIZESTATUSTYPE']._serialized_end=1169
+  _globals['_EXECUTESTATUSTYPE']._serialized_start=1172
+  _globals['_EXECUTESTATUSTYPE']._serialized_end=1302
   _globals['_EMPTY']._serialized_start=21
   _globals['_EMPTY']._serialized_end=28
   _globals['_SERVICESTATUS']._serialized_start=30
   _globals['_SERVICESTATUS']._serialized_end=97
-  _globals['_WAKEWORDSTATUS']._serialized_start=99
-  _globals['_WAKEWORDSTATUS']._serialized_end=131
-  _globals['_RECOGNIZECONTROL']._serialized_start=134
-  _globals['_RECOGNIZECONTROL']._serialized_end=266
-  _globals['_INTENTSLOT']._serialized_start=268
-  _globals['_INTENTSLOT']._serialized_end=309
-  _globals['_RECOGNIZERESULT']._serialized_start=312
-  _globals['_RECOGNIZERESULT']._serialized_end=454
-  _globals['_EXECUTEINPUT']._serialized_start=456
-  _globals['_EXECUTEINPUT']._serialized_end=521
-  _globals['_EXECUTERESULT']._serialized_start=523
-  _globals['_EXECUTERESULT']._serialized_end=592
-  _globals['_VOICEAGENTSERVICE']._serialized_start=962
-  _globals['_VOICEAGENTSERVICE']._serialized_end=1190
+  _globals['_VOICEAUDIO']._serialized_start=99
+  _globals['_VOICEAUDIO']._serialized_end=193
+  _globals['_WAKEWORDSTATUS']._serialized_start=195
+  _globals['_WAKEWORDSTATUS']._serialized_end=227
+  _globals['_S_RECOGNIZEVOICECONTROL']._serialized_start=229
+  _globals['_S_RECOGNIZEVOICECONTROL']._serialized_end=338
+  _globals['_RECOGNIZEVOICECONTROL']._serialized_start=341
+  _globals['_RECOGNIZEVOICECONTROL']._serialized_end=478
+  _globals['_RECOGNIZETEXTCONTROL']._serialized_start=480
+  _globals['_RECOGNIZETEXTCONTROL']._serialized_end=554
+  _globals['_INTENTSLOT']._serialized_start=556
+  _globals['_INTENTSLOT']._serialized_end=597
+  _globals['_RECOGNIZERESULT']._serialized_start=600
+  _globals['_RECOGNIZERESULT']._serialized_end=742
+  _globals['_EXECUTEINPUT']._serialized_start=744
+  _globals['_EXECUTEINPUT']._serialized_end=809
+  _globals['_EXECUTERESULT']._serialized_start=811
+  _globals['_EXECUTERESULT']._serialized_end=880
+  _globals['_VOICEAGENTSERVICE']._serialized_start=1305
+  _globals['_VOICEAGENTSERVICE']._serialized_end=1725
 # @@protoc_insertion_point(module_scope)

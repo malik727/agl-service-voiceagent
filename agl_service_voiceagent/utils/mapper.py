@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 from agl_service_voiceagent.utils.config import get_config_value, get_logger
 from agl_service_voiceagent.utils.common import load_json_file, words_to_number
 
@@ -126,7 +127,7 @@ class Intent2VSSMapper:
         return result
 
 
-    def parse_intent(self, intent_name, intent_slots = []):
+    def parse_intent(self, intent_name, intent_slots = [], req_id = ""):
         """
         Parses an intent, extracting relevant VSS signals, actions, modifiers, and values
         based on the intent and its associated slots.
@@ -148,11 +149,13 @@ class Intent2VSSMapper:
             action = self.determine_action(signal_data, intent_slots)
             modifier = self.determine_modifier(signal_data, intent_slots)
             value = self.determine_value(signal_data, intent_slots)
+            original_value = value
 
             if value != None and not self.verify_value(signal_data, value):
                 value = None
 
             change_factor = signal_data["default_change_factor"]
+            log_change_factor = change_factor
 
             if action in ["increase", "decrease"]:
                 if value and modifier == "to":
@@ -160,6 +163,7 @@ class Intent2VSSMapper:
                 
                 elif value and modifier == "by":
                     execution_list.append({"action": action, "signal": signal_name, "factor": str(value)})
+                    log_change_factor = value
                 
                 elif value:
                     execution_list.append({"action": action, "signal": signal_name, "value": str(value)})
@@ -173,6 +177,20 @@ class Intent2VSSMapper:
 
             if action == "set" and value != None:
                 execution_list.append({"action": action, "signal": signal_name, "value": str(value)})
+
+            
+            # log the mapping data
+            mapping_log_data = {
+                "Signal": signal_name,
+                "Action": action,
+                "Modifier": modifier,
+                "OriginalValue": original_value,
+                "ProcessedValue": value,
+                "ChangeFactor": log_change_factor
+            }
+            mapping_log_data = json.dumps(mapping_log_data)
+            print(f"[+] Mapper Log: {mapping_log_data}")
+            self.logger.info(f"[ReqID#{req_id}] Mapper Log: {mapping_log_data}")
                     
         
         return execution_list
@@ -259,6 +277,8 @@ class Intent2VSSMapper:
         Returns:
             bool: True if the value is valid, False otherwise.
         """
+        value = int(value) if value.isnumeric() else float(value) if value.replace('.', '', 1).isnumeric() else value
+
         if value in signal_data["values"]["ignore"]:
             return False
         

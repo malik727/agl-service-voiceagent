@@ -44,8 +44,13 @@ def load_config():
             os.makedirs(get_config_value('BASE_LOG_DIR'))
 
         logging.basicConfig(filename=get_config_value('BASE_LOG_DIR')+'voiceagent_server.log', level=logging.DEBUG, format='[%(asctime)s] [%(name)s] [%(levelname)s]: (%(filename)s:%(funcName)s) %(message)s', filemode='a')
-        logger = logging.getLogger()
+        logger = logging.getLogger("agl_service_voiceagent")
         logger.info("-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-")
+
+        # remove unwanted third-party loggers
+        logging.getLogger("snips_inference_agl").setLevel(logging.WARNING)
+        logging.getLogger("asyncio").setLevel(logging.WARNING)
+        logging.getLogger("grpc").setLevel(logging.WARNING)
 
     else:
         raise Exception("Config file path not provided.")

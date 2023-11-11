@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import grpc
+import json
 import time
 import threading
 from agl_service_voiceagent.generated import voice_agent_pb2
@@ -101,12 +101,23 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
             status=True,
             wake_word=self.wake_word,
         )
+
+        # Convert the response object to a JSON string and log it
+        response_data = {
+            "version": self.service_version,
+            "status": True,
+            "wake_word": self.wake_word,
+        }
+        response_json = json.dumps(response_data)
+        self.logger.info(f"[ReqID#{request_id}] Returning response to client {client_ip} from CheckServiceStatus end-point. Response: {response_json}")
+
         return response
 
 
     def DetectWakeWord(self, request, context):
         """
-        Detect the wake word using the wake word detection model.
+        Detect the wake word using the wake word detection model. This method records voice on server side. If your client 
+        and server are not on the same machine, then you should use the `S_DetectWakeWord` method instead.
         """
         # Log the unique request ID, client's IP address, and the endpoint
         request_id = generate_unique_uuid(8)
@@ -132,11 +143,14 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
     
     def RecognizeVoiceCommand(self, requests, context):
         """
-        Recognize the voice command using the STT model and extract the intent using the NLU model.
+        Recognize the voice command using the STT model and extract the intent using the NLU model. This method records voice 
+        on server side, meaning the client only sends a START and STOP request to the server. If your client and server are 
+        not on the same machine, then you should use the `S_RecognizeVoiceCommand` method instead.
         """
         stt = ""
         intent = ""
         intent_slots = []
+        log_intent_slots = []
 
         for request in requests:
             if request.record_mode == voice_agent_pb2.MANUAL:
@@ -183,9 +197,11 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
 
                             if not intent or intent == "":
                                 status = voice_agent_pb2.INTENT_NOT_RECOGNIZED
-
-                            for action, value in intent_actions.items():
-                                intent_slots.append(voice_agent_pb2.IntentSlot(name=action, value=value))
+                            
+                            else:
+                                for action, value in intent_actions.items():
+                                    intent_slots.append(voice_agent_pb2.IntentSlot(name=action, value=value))
+                                    log_intent_slots.append({"name": action, "value": value})
                         
                         elif request.nlu_model == voice_agent_pb2.RASA:
                             extracted_intent = self.rasa_interface.extract_intent(stt)
@@ -194,8 +210,13 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
                             if not intent or intent == "":
                                 status = voice_agent_pb2.INTENT_NOT_RECOGNIZED
 
-                            for action, value in intent_actions.items():
-                                intent_slots.append(voice_agent_pb2.IntentSlot(name=action, value=value))
+                            else:
+                                for action, value in intent_actions.items():
+                                    intent_slots.append(voice_agent_pb2.IntentSlot(name=action, value=value))
+                                    log_intent_slots.append({"name": action, "value": value})
+
+                        else:
+                            status = voice_agent_pb2.NLU_MODEL_NOT_SUPPORTED
 
                     else:
                         stt = ""
@@ -217,17 +238,95 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
             stream_id=stream_uuid,
             status=status
         )
+
+        # Convert the response object to a JSON string and log it
+        response_data = {
+            "command": stt,
+            "intent": intent,
+            "intent_slots": log_intent_slots,
+            "stream_id": stream_uuid,
+            "status": status
+        }
+        response_json = json.dumps(response_data)
+        self.logger.info(f"[ReqID#{stream_uuid}] Returning {request.action} request response to client {client_ip} from RecognizeVoiceCommand end-point. Response: {response_json}")
+
+        return response
+    
+
+    def RecognizeTextCommand(self, request, context):
+        """
+        Recognize the text command using the STT model and extract the intent using the NLU model.
+        """
+        intent = ""
+        intent_slots = []
+        log_intent_slots = []
+
+        stream_uuid = generate_unique_uuid(8)
+        text_command = request.text_command
+        status = voice_agent_pb2.REC_SUCCESS
+
+        # Log the unique request ID, client's IP address, and the endpoint
+        client_ip = context.peer()
+        self.logger.info(f"[ReqID#{stream_uuid}] Client {client_ip} made a request to RecognizeTextCommand end-point.")
+
+        if request.nlu_model == voice_agent_pb2.SNIPS:
+            extracted_intent = self.snips_interface.extract_intent(text_command)
+            intent, intent_actions = self.snips_interface.process_intent(extracted_intent)
+
+            if not intent or intent == "":
+                status = voice_agent_pb2.INTENT_NOT_RECOGNIZED
+            
+            else:
+                for action, value in intent_actions.items():
+                    intent_slots.append(voice_agent_pb2.IntentSlot(name=action, value=value))
+                    log_intent_slots.append({"name": action, "value": value})
+        
+        elif request.nlu_model == voice_agent_pb2.RASA:
+            extracted_intent = self.rasa_interface.extract_intent(text_command)
+            intent, intent_actions = self.rasa_interface.process_intent(extracted_intent)
+
+            if not intent or intent == "":
+                status = voice_agent_pb2.INTENT_NOT_RECOGNIZED
+
+            else:
+                for action, value in intent_actions.items():
+                    intent_slots.append(voice_agent_pb2.IntentSlot(name=action, value=value))
+                    log_intent_slots.append({"name": action, "value": value})
+        
+        else:
+            status = voice_agent_pb2.NLU_MODEL_NOT_SUPPORTED
+
+        # Process the request and generate a RecognizeResult
+        response = voice_agent_pb2.RecognizeResult(
+            command=text_command,
+            intent=intent,
+            intent_slots=intent_slots,
+            stream_id=stream_uuid,
+            status=status
+        )
+
+        # Convert the response object to a JSON string and log it
+        response_data = {
+            "command": text_command,
+            "intent": intent,
+            "intent_slots": log_intent_slots,
+            "stream_id": stream_uuid,
+            "status": status
+        }
+        response_json = json.dumps(response_data)
+        self.logger.info(f"[ReqID#{stream_uuid}] Returning response to client {client_ip} from RecognizeTextCommand end-point. Response: {response_json}")
+
         return response
 
 
-    def ExecuteVoiceCommand(self, request, context):
+    def ExecuteCommand(self, request, context):
         """
         Execute the voice command by sending the intent to Kuksa.
         """
         # Log the unique request ID, client's IP address, and the endpoint
         request_id = generate_unique_uuid(8)
         client_ip = context.peer()
-        self.logger.info(f"[ReqID#{request_id}] Client {client_ip} made a request to ExecuteVoiceCommand end-point.")
+        self.logger.info(f"[ReqID#{request_id}] Client {client_ip} made a request to ExecuteCommand end-point.")
 
         intent = request.intent
         intent_slots = request.intent_slots
@@ -239,7 +338,7 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
 
         print(intent)
         print(processed_slots)
-        execution_list = self.mapper.parse_intent(intent, processed_slots)
+        execution_list = self.mapper.parse_intent(intent, processed_slots, req_id=request_id)
         exec_response = f"Sorry, I failed to execute command against intent '{intent}'. Maybe try again with more specific instructions."
         exec_status = voice_agent_pb2.EXEC_ERROR
 
@@ -296,5 +395,13 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
             response=exec_response,
             status=exec_status
         )
+
+        # Convert the response object to a JSON string and log it
+        response_data = {
+            "response": exec_response,
+            "status": exec_status
+        }
+        response_json = json.dumps(response_data)
+        self.logger.info(f"[ReqID#{request_id}] Returning response to client {client_ip} from ExecuteCommand end-point. Response: {response_json}")
 
         return response
