@@ -48,19 +48,21 @@ voiceagent-service run-server --config CONFIG_FILE_PATH
 ```   
 
 #### Running the Client
-To interact with the gRPC server, you can run the client in different modes:
-- Wake-word Mode: Detects wake words and triggers voice commands.
-- Manual Mode: Manually control voice command recognition.
+To interact with the gRPC server, you can run the client by specifying one of the following actions:
+- GetStatus: Get the current status of the Voice Agent service.
+- DetectWakeWord: Detect wake-word from the user's voice.
+- ExecuteVoiceCommand: Execute a voice command from the user.
+- ExecuteTextCommand: Execute a text command from the user.
 
-To run the client in a Wake-word mode, use the following command:
+To test out the WakeWord functionality, use the following command:
 ```bash
-voiceagent-service run-client --server_address SERVER_IP --server_port SERVER_PORT --mode wake-word
+voiceagent-service run-client --server_address SERVER_IP --server_port SERVER_PORT --action DetectWakeWord
 ```
 Replace `SERVER_IP` with IP address of the running Voice Agent server, and `SERVER_PORT` with the port of the running Voice Agent server.
 
-To run the client in Manual mode, use the following command:
+To issue a voice command, use the following command:
 ```bash
-voiceagent-service run-client --server_address SERVER_IP --server_port SERVER_PORT --mode manual --nlu NLU_ENGINE
+voiceagent-service run-client --server_address SERVER_IP --server_port SERVER_PORT --action ExecuteVoiceCommand --mode manual --nlu NLU_ENGINE
 ```
 Replace `NLU_ENGINE` with the preferred NLU engine ("snips" or "rasa"), `SERVER_IP` with IP address of the running Voice Agent server, and `SERVER_PORT` with the port of the running Voice Agent server. You can also pass a custom value to flag `--recording-time` if you want to change the default recording time from 5 seconds to any other value.
 
