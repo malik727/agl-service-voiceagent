@@ -369,7 +369,9 @@ class VoiceAgentServicer(voice_agent_pb2_grpc.VoiceAgentServiceServicer):
                             exec_status = voice_agent_pb2.EXEC_SUCCESS
                     
                     elif "factor" in execution_item:
-                        factor = execution_item["factor"]
+                        # incoming values are always str as kuksa expects str during subscribe we need to convert
+                        # the value to int before performing any arithmetic operations and then convert back to str
+                        factor = int(execution_item["factor"]) 
                         current_value = self.kuksa_client.get_value(signal)
                         if current_value:
                             current_value = int(current_value)
